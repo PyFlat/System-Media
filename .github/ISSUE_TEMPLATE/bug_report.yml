@@ -1,0 +1,61 @@
+name: Bug report
+description: Something isn't working the way it should.
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. Please check open issues first to avoid a duplicate.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+
+  - type: input
+    id: app
+    attributes:
+      label: Which app was playing?
+      placeholder: e.g. Spotify, YouTube in Firefox, VLC
+    validations:
+      required: true
+
+  - type: dropdown
+    id: system
+    attributes:
+      label: Operating system
+      options:
+        - Windows
+        - macOS
+        - Linux
+    validations:
+      required: true
+
+  - type: input
+    id: plugin-version
+    attributes:
+      label: Plugin version
+      description: The version shown for System Media in Macro Deck's plugin manager.
+      placeholder: e.g. 1.1.0
+    validations:
+      required: true
+
+  - type: input
+    id: macrodeck-version
+    attributes:
+      label: Macro Deck version
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: >
+        Macro Deck's log viewer, filtered to System Media, covering the time the problem occurred. Remove
+        anything you'd rather not share, such as track titles.
+      render: text

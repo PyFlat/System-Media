@@ -1,0 +1,20 @@
+<Project>
+
+    <PropertyGroup>
+        <!-- The Windows backend needs the Windows SDK projection; everything else builds net10.0.
+             -p:SystemMediaWindows=false forces net10.0 on Windows. -->
+        <SystemMediaWindows Condition="'$(SystemMediaWindows)' == '' and '$(RuntimeIdentifier)' != ''">$([System.String]::Copy('$(RuntimeIdentifier)').StartsWith('win'))</SystemMediaWindows>
+        <SystemMediaWindows Condition="'$(SystemMediaWindows)' == ''">$([MSBuild]::IsOSPlatform('Windows'))</SystemMediaWindows>
+        <TargetFramework Condition="'$(SystemMediaWindows)' == 'true'">net10.0-windows10.0.19041.0</TargetFramework>
+        <TargetFramework Condition="'$(SystemMediaWindows)' != 'true'">net10.0</TargetFramework>
+        <!-- First build where the session manager and AppInfo lookups are reliable for desktop apps. -->
+        <SupportedOSPlatformVersion Condition="'$(SystemMediaWindows)' == 'true'">10.0.19041.0</SupportedOSPlatformVersion>
+        <EnableWindowsTargeting>true</EnableWindowsTargeting>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>true</ImplicitUsings>
+        <AnalysisLevel>latest-recommended</AnalysisLevel>
+        <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+        <WarningsAsErrors>CS8602</WarningsAsErrors>
+    </PropertyGroup>
+
+</Project>

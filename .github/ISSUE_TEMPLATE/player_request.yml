@@ -1,0 +1,86 @@
+name: Player support request
+description: Ask for a media player that System Media doesn't show yet. No coding needed.
+title: "[Player Request]: "
+labels: [player-request]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        System Media already works with every player that shows up in your system's media controls. Please
+        check that first:
+
+        - **Windows:** play something, then press a volume key. Does the player appear in the overlay
+          that pops up?
+        - **macOS:** play something and open Control Center. Does the player appear under Now Playing?
+        - **Linux:** play something and look at your desktop's media controls (or run `playerctl -l`).
+
+        If it appears there but not in Macro Deck, that's a bug, not a missing player: please use the bug
+        report instead.
+
+  - type: input
+    id: player
+    attributes:
+      label: Player
+      description: Its name and where to get it.
+      placeholder: e.g. AIMP, https://www.aimp.ru
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: systems
+    attributes:
+      label: Which systems do you use it on?
+      options:
+        - label: Windows
+        - label: macOS
+        - label: Linux
+
+  - type: dropdown
+    id: media-controls
+    attributes:
+      label: Does it show up in the system's media controls (see above)?
+      options:
+        - "No"
+        - Not sure
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: remote
+    attributes:
+      label: Can the player be controlled from outside? Tick whatever you know of.
+      description: Look in its settings, its website or its plugin list. "Don't know" is a fine answer.
+      options:
+        - label: A web interface or a phone remote-control app
+        - label: Command line options (e.g. `player.exe /next`)
+        - label: A plugin or add-on that adds remote control
+        - label: Only keyboard shortcuts
+        - label: I don't know
+
+  - type: textarea
+    id: details
+    attributes:
+      label: Links or details
+      description: >
+        Anything that helps: a link to the player's remote-control or command line documentation, the
+        name of a plugin, a screenshot of the relevant settings page.
+
+  - type: checkboxes
+    id: wanted
+    attributes:
+      label: What matters most to you?
+      options:
+        - label: Seeing the title and artist
+        - label: The cover
+        - label: Play / pause
+        - label: Next / previous
+        - label: Seeking and progress
+        - label: Volume
+
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Helping out
+      options:
+        - label: I can test a preview version with this player.
+        - label: I'd like to add it myself (see docs/adding-a-player.md).

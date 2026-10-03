@@ -1,0 +1,40 @@
+# Editors and tools
+.idea/
+.vs/
+*.user
+*.suo
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.claude/
+.gemini/
+.agents/
+
+# OS files
+.DS_Store
+._*
+Thumbs.db
+[Dd]esktop.ini
+
+# Build output
+[Bb]in/
+[Oo]bj/
+publish/
+artifacts/
+TestResults/
+*.trx
+*.log
+conformance.md
+
+# Scene handshake between make demo and make screenshots
+demo/.scene
+demo/.scenes
+
+# Local credentials of the real-host launch profile
+**/.macrodeck-dev-state/
+
+# Locally packed Macro Deck SDK packages (see NuGet.config)
+local-feed/*
+!local-feed/.gitkeep

@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- The default-language file. Every translation is checked against it and the fallback chain ends
+       here, so it is required even for a plugin that ships one language. The Music Player actions
+       come from the SDK and are not declared here. Add Localization/Strings.<culture>.resx beside it
+       for a language. A dotted key becomes a nested class. -->
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Issues.MediaControlsUnavailable.Title" xml:space="preserve">
+    <value>Windows media controls are not available</value>
+  </data>
+  <data name="Issues.MediaControlsUnavailable.Description" xml:space="preserve">
+    <value>The plugin could not connect to the Windows media session service, so it cannot see what any app is playing. It needs Windows 10 version 2004 or newer. If Windows has only just started, retry in a moment.</value>
+  </data>
+  <data name="Issues.MediaControlsUnavailable.Action" xml:space="preserve">
+    <value>Retry</value>
+  </data>
+  <data name="Issues.MediaControlsUnavailable.StillUnavailable" xml:space="preserve">
+    <value>The Windows media session service is still not reachable.</value>
+  </data>
+  <data name="Issues.Unknown" xml:space="preserve">
+    <value>This issue is not known to the plugin.</value>
+  </data>
+  <data name="Issues.VlcAddOnMissing.Title" xml:space="preserve">
+    <value>VLC needs a small add-on to show up here</value>
+  </data>
+  <data name="Issues.VlcAddOnMissing.Description" xml:space="preserve">
+    <value>VLC does not report what it plays to Windows on its own. The free vlc-win10smtc add-on makes it: download the {architecture} zip (it has to match your VLC, not Windows), copy libwin10smtc_plugin.dll from it into {folder} and come back here. This plugin switches the add-on on for you in the next step.</value>
+  </data>
+  <data name="Issues.VlcAddOnMissing.Action" xml:space="preserve">
+    <value>Open download page</value>
+  </data>
+  <data name="Issues.VlcAddOnMissing.Opened" xml:space="preserve">
+    <value>The download page opened in your browser.</value>
+  </data>
+  <data name="Issues.VlcAddOnMissing.OpenFailed" xml:space="preserve">
+    <value>The download page could not be opened. It is at {url}.</value>
+  </data>
+  <data name="Issues.VlcAddOnDisabled.Title" xml:space="preserve">
+    <value>Turn on VLC's media controls add-on</value>
+  </data>
+  <data name="Issues.VlcAddOnDisabled.Description" xml:space="preserve">
+    <value>The vlc-win10smtc add-on is installed but switched off in VLC. Turn it on here, then restart VLC.</value>
+  </data>
+  <data name="Issues.VlcAddOnDisabled.Action" xml:space="preserve">
+    <value>Turn on</value>
+  </data>
+  <data name="Issues.VlcAddOnDisabled.Enabled" xml:space="preserve">
+    <value>Turned on. Restart VLC to start using it.</value>
+  </data>
+  <data name="Issues.VlcAddOnDisabled.EnableFailed" xml:space="preserve">
+    <value>VLC's settings could not be changed. Close VLC and try again.</value>
+  </data>
+  <data name="Variables.AppName" xml:space="preserve">
+    <value>Playing app</value>
+  </data>
+  <data name="Variables.TrackName" xml:space="preserve">
+    <value>Track name</value>
+  </data>
+  <data name="Variables.Artist" xml:space="preserve">
+    <value>Artist</value>
+  </data>
+  <data name="Variables.Album" xml:space="preserve">
+    <value>Album</value>
+  </data>
+  <data name="Variables.PlaybackState" xml:space="preserve">
+    <value>Playback state</value>
+  </data>
+  <data name="Variables.IsPlaying" xml:space="preserve">
+    <value>Is playing</value>
+  </data>
+  <data name="Variables.Position" xml:space="preserve">
+    <value>Position</value>
+  </data>
+  <data name="Variables.Duration" xml:space="preserve">
+    <value>Duration</value>
+  </data>
+  <data name="Variables.ProgressPercentage" xml:space="preserve">
+    <value>Progress</value>
+  </data>
+  <data name="Variables.Volume" xml:space="preserve">
+    <value>App volume</value>
+  </data>
+  <data name="Variables.ShuffleEnabled" xml:space="preserve">
+    <value>Shuffle enabled</value>
+  </data>
+  <data name="Variables.RepeatMode" xml:space="preserve">
+    <value>Repeat mode</value>
+  </data>
+  <data name="Events.TrackChanged.Name" xml:space="preserve">
+    <value>Track changed</value>
+  </data>
+  <data name="Events.TrackChanged.Description" xml:space="preserve">
+    <value>Fires when an app starts playing a different track, video or stream.</value>
+  </data>
+  <data name="Events.PlaybackStateChanged.Name" xml:space="preserve">
+    <value>Playback state changed</value>
+  </data>
+  <data name="Events.PlaybackStateChanged.Description" xml:space="preserve">
+    <value>Fires when an app starts playing, pauses or stops.</value>
+  </data>
+  <data name="Events.CurrentAppChanged.Name" xml:space="preserve">
+    <value>Playing app changed</value>
+  </data>
+  <data name="Events.CurrentAppChanged.Description" xml:space="preserve">
+    <value>Fires when Windows switches the media controls to a different app, for example from Spotify to a browser.</value>
+  </data>
+  <data name="Events.Parameters.App.Label" xml:space="preserve">
+    <value>App</value>
+  </data>
+  <data name="Events.Parameters.App.Description" xml:space="preserve">
+    <value>Optional. Only fires for this app.</value>
+  </data>
+  <data name="Events.Parameters.App.Placeholder" xml:space="preserve">
+    <value>Any app</value>
+  </data>
+  <data name="Events.Parameters.AppName" xml:space="preserve">
+    <value>App name</value>
+  </data>
+  <data name="Events.Parameters.Track" xml:space="preserve">
+    <value>Track</value>
+  </data>
+  <data name="Events.Parameters.Artist" xml:space="preserve">
+    <value>Artist</value>
+  </data>
+  <data name="Events.Parameters.Album" xml:space="preserve">
+    <value>Album</value>
+  </data>
+  <data name="Events.Parameters.PreviousAppName" xml:space="preserve">
+    <value>Previous app</value>
+  </data>
+  <data name="Events.Parameters.State.Label" xml:space="preserve">
+    <value>State</value>
+  </data>
+  <data name="Events.Parameters.State.Description" xml:space="preserve">
+    <value>Optional. Only fires when playback changes to this state.</value>
+  </data>
+  <data name="Events.Parameters.State.Playing" xml:space="preserve">
+    <value>Playing</value>
+  </data>
+  <data name="Events.Parameters.State.Paused" xml:space="preserve">
+    <value>Paused</value>
+  </data>
+  <data name="Events.Parameters.State.Stopped" xml:space="preserve">
+    <value>Stopped</value>
+  </data>
+  <data name="Issues.MediaControlMissing.Title" xml:space="preserve">
+    <value>Install media-control to use System Media on macOS</value>
+  </data>
+  <data name="Issues.MediaControlMissing.Description" xml:space="preserve">
+    <value>macOS only lets Apple's own programs read what is playing. The free media-control tool does that for this plugin. Install it with Homebrew by running {command} in Terminal, then press Check again.</value>
+  </data>
+  <data name="Issues.MediaControlMissing.Action" xml:space="preserve">
+    <value>Check again</value>
+  </data>
+  <data name="Issues.MediaControlMissing.StillMissing" xml:space="preserve">
+    <value>media-control is still not installed. Run {command} in Terminal and try again.</value>
+  </data>
+  <data name="Issues.MacMediaUnavailable.Title" xml:space="preserve">
+    <value>macOS Now Playing is not available</value>
+  </data>
+  <data name="Issues.MacMediaUnavailable.Description" xml:space="preserve">
+    <value>The plugin reads Now Playing through media-control, and that is not working. A macOS or media-control update can cause this. Update it with brew upgrade media-control and retry. If it keeps failing, report it together with the plugin log.</value>
+  </data>
+  <data name="Issues.MacMediaUnavailable.Action" xml:space="preserve">
+    <value>Retry</value>
+  </data>
+  <data name="Issues.MacMediaUnavailable.StillUnavailable" xml:space="preserve">
+    <value>macOS Now Playing is still not reachable.</value>
+  </data>
+  <data name="Issues.PlatformUnsupported.Title" xml:space="preserve">
+    <value>This operating system is not supported yet</value>
+  </data>
+  <data name="Issues.PlatformUnsupported.Description" xml:space="preserve">
+    <value>System Media supports Windows, macOS and Linux.</value>
+  </data>
+  <data name="Issues.ExactYouTubeInfo.Title" xml:space="preserve">
+    <value>Exact YouTube info is available in the settings</value>
+  </data>
+  <data name="Issues.ExactYouTubeInfo.Description" xml:space="preserve">
+    <value>YouTube in Firefox, Chrome and Edge often reports another video's title, channel and cover, typically after you hovered over other videos. System Media's settings have a switch for exact YouTube info: while it is on, the plugin reads the browser's open tabs (which makes the browser switch on its accessibility support) to find the video that is really playing, and looks up its title, channel and cover on YouTube. It stays off until you switch it on, and this notice goes away once it is on.</value>
+  </data>
+  <data name="Actions.ShowNextPlayingApp.Name" xml:space="preserve">
+    <value>Show the next playing app</value>
+  </data>
+  <data name="Actions.ShowNextPlayingApp.Description" xml:space="preserve">
+    <value>When several apps play at the same time, switches the System Media - Any app player to the next one that plays. It stays there while that app plays.</value>
+  </data>
+  <data name="Actions.ShowNextPlayingApp.NothingElsePlaying" xml:space="preserve">
+    <value>No other app is playing right now.</value>
+  </data>
+  <data name="ConfigFlow.Settings.Title" xml:space="preserve">
+    <value>System Media settings</value>
+  </data>
+  <data name="ConfigFlow.Settings.Description" xml:space="preserve">
+    <value>Optional settings. System Media works without changing any of them.</value>
+  </data>
+  <data name="ConfigFlow.Settings.UnknownStep" xml:space="preserve">
+    <value>This settings page is out of date. Close it and open the settings again.</value>
+  </data>
+  <data name="ConfigFlow.Settings.ExactYouTubeInfo.Label" xml:space="preserve">
+    <value>Exact YouTube info in browsers</value>
+  </data>
+  <data name="ConfigFlow.Settings.ExactYouTubeInfo.Description" xml:space="preserve">
+    <value>Reads Firefox's, Chrome's and Edge's tabs to find the YouTube video that is really playing and looks up its title, channel and cover on YouTube, because YouTube's hover previews leave another video's info in the browser. Reading the tabs makes the browser switch on its accessibility support.</value>
+  </data>
+  <data name="MusicPlayer.Options.Cycle.Label" xml:space="preserve">
+    <value>Cycle through playing apps</value>
+  </data>
+  <data name="MusicPlayer.Options.Cycle.Description" xml:space="preserve">
+    <value>While several apps play at the same time, this widget shows each of them in turn. Its buttons control the app it shows.</value>
+  </data>
+  <data name="MusicPlayer.Options.CycleSeconds.Label" xml:space="preserve">
+    <value>Seconds per app</value>
+  </data>
+  <data name="MusicPlayer.Options.CycleSeconds.Description" xml:space="preserve">
+    <value>How long each playing app is shown before the next one.</value>
+  </data>
+  <data name="Issues.LinuxMediaUnavailable.Title" xml:space="preserve">
+    <value>Media players cannot be reached</value>
+  </data>
+  <data name="Issues.LinuxMediaUnavailable.Description" xml:space="preserve">
+    <value>Linux media players publish what they play over D-Bus (MPRIS), but this plugin could not connect to the D-Bus session bus. This happens when Macro Deck runs outside a desktop session, for example as a system service. Start Macro Deck from your desktop session and try again.</value>
+  </data>
+  <data name="Issues.LinuxMediaUnavailable.Action" xml:space="preserve">
+    <value>Try again</value>
+  </data>
+  <data name="Issues.LinuxMediaUnavailable.StillUnavailable" xml:space="preserve">
+    <value>The D-Bus session bus is still not reachable.</value>
+  </data>
+</root>

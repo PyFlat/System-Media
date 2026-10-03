@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <AssemblyName>SystemMedia</AssemblyName>
+        <RootNamespace>SystemMedia</RootNamespace>
+        <IsPackable>false</IsPackable>
+        <UserSecretsId>SystemMedia-PluginDevelopment</UserSecretsId>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="SystemMedia.Tests" />
+    </ItemGroup>
+
+    <!-- Made-up sessions for store screenshots; never part of a release. -->
+    <ItemGroup Condition="'$(Configuration)' != 'Debug'">
+        <Compile Remove="Demo\**" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(SystemMediaWindows)' != 'true'">
+        <Compile Remove="Platform\Windows\**" />
+        <PackageReference Include="Tmds.DBus.Protocol" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(SystemMediaWindows)' == 'true'">
+        <Compile Remove="Platform\Linux\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="MacroDeck.Plugin.Analyzers" PrivateAssets="all" />
+        <PackageReference Include="MacroDeck.Localization" />
+        <PackageReference Include="MacroDeck.Plugin.Hosting" />
+        <PackageReference Include="MacroDeck.Plugin.Serilog" />
+        <PackageReference Include="MacroDeck.Sdk" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="manifest.json" CopyToOutputDirectory="PreserveNewest" />
+        <Content Include="Assets\icon.svg" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+
+</Project>
