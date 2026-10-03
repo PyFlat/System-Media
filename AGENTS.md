@@ -13,21 +13,23 @@ src/SystemMedia/
   PluginIntegration.cs      instances (current + one per known app, per-widget cycling), variables, events,
                             issues, the optional settings page
   SettingsConfigFlow.cs     the settings page (exact YouTube info)
-  ShowNextPlayingAppAction  the plugin's own action
+  ShowNextPlayingAppAction  switches "Any app" to the next playing app
+  SetDefaultAudioDevice...  switches a default sound device (also done by writing a device variable)
   Core/                     platform-neutral: the player, snapshot, state mapping, leftover filter and
                             thumbnail history, "any app" picker, instance ids, remembered apps, settings,
                             YouTube correction
   Events/                   event definitions, change detection, the once-a-second watcher
-  Variables/                deck variables for the current session
+  Variables/                deck variables for the current session and the default sound devices
   Platform/
     IMediaPlatform.cs       the interface every OS backend implements
+    IAudioDevices.cs        the default sound devices, read and switched per OS
     CompositeMediaPlatform  the OS backend plus every IMediaSource, routed by app id
-    Windows/                GSMTC sessions, volume mixer (Audio/), app names (Shell/), icons, VLC add-on,
+    Windows/                GSMTC sessions, volume mixer and sound devices (Audio/), app names (Shell/), icons, VLC add-on,
                             browser tabs (Browser/)
     Linux/                  MPRIS over the D-Bus session bus (Tmds.DBus.Protocol), app icons from .desktop
-                            files and the hicolor theme
+                            files and the hicolor theme, sound devices through pactl
     MacOS/                  Now Playing through the user's Homebrew media-control, app names/icons via
-                            mdfind/sips
+                            mdfind/sips, sound devices through Core Audio
   Players/                  players the system does not see: the Player base class, MpvPlayer, SmPlayer,
                             the watcher that polls each, local sockets and the Qt single-app message
 docs/                       adding-a-player.md, the contributor guide for a new Player
@@ -49,6 +51,9 @@ Look there instead of guessing.
   `thumbnail-history.json`
 - the "Any app" widget option names (`cycle`, `cycle-seconds`) and settings field names
   (`exact_youtube_info`), stored in users' widgets and config entry
+- action ids, parameter names and choice values (`set-default-audio-device` with `role` and `device`),
+  and the device ids it stores: the Windows endpoint id, the macOS device UID, the PulseAudio sink or
+  source name
 
 **Instances.** The host only resolves instance ids `GetInstances()` currently lists and uses the first as
 the default. `current` stays first, and an app once seen stays listed (and remembered on disk). Names carry
@@ -69,6 +74,11 @@ single-configuration integration to `default` and keeps only the first.
 - Linux has no system-wide current player; the one that started playing last stands in. MPRIS volume is
   the player's own, so a player without a `Volume` property gets no slider. An app id is the bus name
   after `org.mpris.MediaPlayer2.` without a `.instance...` suffix, so every instance is one app.
+- Sound devices are an `IAudioDevices` behind `IMediaPlatform.AudioDevices`: Core Audio on Windows and
+  macOS, `pactl --format=json` on Linux (it ships with PulseAudio and `pipewire-pulse`, run with
+  `LC_NUMERIC=C` because some locales break its JSON). Only Windows has communication defaults; elsewhere
+  those roles are the plain defaults. Windows switches through the undocumented `IPolicyConfig`, as every
+  device switcher does; keep it confined to `WindowsAudioDevices`.
 - No third-party program is bundled or run unless the user installed it (Store guideline 2); managed NuGet
   libraries such as Tmds.DBus.Protocol are fine. macOS relies on the user installing `media-control`
   from Homebrew; its `stream --micros` output is what `NowPlayingState` parses. Its version is not pinned,

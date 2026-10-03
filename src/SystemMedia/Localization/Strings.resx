@@ -97,6 +97,18 @@
   <data name="Variables.RepeatMode" xml:space="preserve">
     <value>Repeat mode</value>
   </data>
+  <data name="Variables.OutputDevice" xml:space="preserve">
+    <value>Default output device</value>
+  </data>
+  <data name="Variables.InputDevice" xml:space="preserve">
+    <value>Default input device</value>
+  </data>
+  <data name="Variables.CommunicationOutputDevice" xml:space="preserve">
+    <value>Default communication output device</value>
+  </data>
+  <data name="Variables.CommunicationInputDevice" xml:space="preserve">
+    <value>Default communication input device</value>
+  </data>
   <data name="Events.TrackChanged.Name" xml:space="preserve">
     <value>Track changed</value>
   </data>
@@ -198,6 +210,45 @@
   </data>
   <data name="Actions.ShowNextPlayingApp.NothingElsePlaying" xml:space="preserve">
     <value>No other app is playing right now.</value>
+  </data>
+  <data name="Actions.SetDefaultAudioDevice.Name" xml:space="preserve">
+    <value>Set the default audio device</value>
+  </data>
+  <data name="Actions.SetDefaultAudioDevice.Description" xml:space="preserve">
+    <value>Makes a speaker, headset or microphone the system's default.</value>
+  </data>
+  <data name="Actions.SetDefaultAudioDevice.Role.Label" xml:space="preserve">
+    <value>Default for</value>
+  </data>
+  <data name="Actions.SetDefaultAudioDevice.Role.Description" xml:space="preserve">
+    <value>Only Windows has separate defaults for calls; elsewhere they are the plain defaults.</value>
+  </data>
+  <data name="Actions.SetDefaultAudioDevice.Role.Output" xml:space="preserve">
+    <value>Output</value>
+  </data>
+  <data name="Actions.SetDefaultAudioDevice.Role.Input" xml:space="preserve">
+    <value>Input</value>
+  </data>
+  <data name="Actions.SetDefaultAudioDevice.Role.CommunicationOutput" xml:space="preserve">
+    <value>Communication output</value>
+  </data>
+  <data name="Actions.SetDefaultAudioDevice.Role.CommunicationInput" xml:space="preserve">
+    <value>Communication input</value>
+  </data>
+  <data name="Actions.SetDefaultAudioDevice.Device.Label" xml:space="preserve">
+    <value>Device</value>
+  </data>
+  <data name="Actions.SetDefaultAudioDevice.NotSupported" xml:space="preserve">
+    <value>Audio devices cannot be changed on this system.</value>
+  </data>
+  <data name="Actions.SetDefaultAudioDevice.NoDevice" xml:space="preserve">
+    <value>Choose a device first.</value>
+  </data>
+  <data name="Actions.SetDefaultAudioDevice.DeviceNotFound" xml:space="preserve">
+    <value>That device is not connected.</value>
+  </data>
+  <data name="Actions.SetDefaultAudioDevice.Failed" xml:space="preserve">
+    <value>The default device could not be changed.</value>
   </data>
   <data name="ConfigFlow.Settings.Title" xml:space="preserve">
     <value>System Media settings</value>

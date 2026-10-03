@@ -95,6 +95,8 @@ internal sealed class CompositeMediaPlatform : IMediaPlatform
 			: _system.SetVolumePercentAsync(app, volumePercent, cancellationToken);
 	}
 
+	public IAudioDevices? AudioDevices => _system.AudioDevices;
+
 	public IReadOnlyList<IntegrationIssue> GetIssues() =>
 		[.. _system.GetIssues(), .. _sources.SelectMany(source => source.GetIssues())];
 

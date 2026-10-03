@@ -123,6 +123,8 @@ internal sealed class MacMediaPlatform : IMediaPlatform
 
 	public Task<bool> SetVolumePercentAsync(AppIdentity app, int volumePercent, CancellationToken cancellationToken) => Task.FromResult(false);
 
+	public IAudioDevices AudioDevices { get; } = new CoreAudioDevices();
+
 	// Only once a start failed or the stream broke: the host asks for issues while the first start still runs.
 	public IReadOnlyList<IntegrationIssue> GetIssues() =>
 		!_broken ? []

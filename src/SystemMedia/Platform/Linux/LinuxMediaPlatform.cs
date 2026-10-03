@@ -138,6 +138,8 @@ internal sealed class LinuxMediaPlatform : IMediaPlatform
 		Find(app.AppId) is { } player && player.CanControl && player.Has("Volume") &&
 		await TryAsync(bus => bus.SetAsync(player.BusName, "Volume", Math.Clamp(volumePercent, 0, 100) / 100d), cancellationToken);
 
+	public IAudioDevices AudioDevices { get; } = new PulseAudioDevices();
+
 	// Not "not started": the host asks for issues while the first start is still running.
 	public IReadOnlyList<IntegrationIssue> GetIssues() =>
 		!_startFailed ? [] :

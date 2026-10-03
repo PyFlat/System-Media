@@ -1,5 +1,6 @@
 using MacroDeck.Sdk.MusicPlayer;
 using NUnit.Framework;
+using SystemMedia.Platform;
 using SystemMedia.Variables;
 
 namespace SystemMedia.Tests;
@@ -41,6 +42,24 @@ public sealed class SystemMediaVariablesTests
 	public void A_variable_reads_its_value_from_the_current_state(string id, object expected)
 	{
 		Assert.That(SystemMediaVariables.Read(id, _playing).Value, Is.EqualTo(expected));
+	}
+
+	[TestCase("system-media-output-device", nameof(AudioDeviceRole.Output))]
+	[TestCase("system-media-input-device", nameof(AudioDeviceRole.Input))]
+	[TestCase("system-media-communication-output-device", nameof(AudioDeviceRole.CommunicationOutput))]
+	[TestCase("system-media-communication-input-device", nameof(AudioDeviceRole.CommunicationInput))]
+	public void A_device_variable_is_a_writable_default_device(string id, string role)
+	{
+		var variable = SystemMediaVariables.All.Single(candidate => candidate.ResolvedId == id);
+
+		Assert.That(variable.CanWrite, Is.True);
+		Assert.That(SystemMediaVariables.DeviceRole(id).ToString(), Is.EqualTo(role));
+	}
+
+	[Test]
+	public void A_state_variable_is_no_device()
+	{
+		Assert.That(SystemMediaVariables.DeviceRole(SystemMediaVariables.VolumeId), Is.Null);
 	}
 
 	[Test]

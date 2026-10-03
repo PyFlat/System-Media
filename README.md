@@ -73,6 +73,27 @@ For whatever is playing right now (the same as *Any app*):
 | `system_media_volume`                                                  | The app's volume in percent; can be set      |
 | `system_media_shuffle_enabled`, `system_media_repeat_mode`             | `repeat_mode` is `off`, `track` or `context` |
 
+### Sound devices
+
+Whatever is playing, these name the system's default sound devices:
+
+| Variable                                   | Value                                                  |
+| ------------------------------------------ | ------------------------------------------------------ |
+| `system_media_output_device`               | The default output, e.g. `Speakers (Realtek(R) Audio)` |
+| `system_media_input_device`                | The default input, e.g. `Microphone (USB Audio)`       |
+| `system_media_communication_output_device` | The output Windows uses for calls                      |
+| `system_media_communication_input_device`  | The input Windows uses for calls                       |
+
+Setting one of them to a device's name makes that device the default. The **Set the default audio device**
+action does the same with a device picked from a list.
+
+Only Windows keeps separate devices for calls. On macOS and Linux the communication variables show the
+plain defaults, and setting one changes the plain default.
+
+On Linux the devices are read and switched with `pactl`, which comes with PulseAudio and with PipeWire's
+PulseAudio support (`pipewire-pulse`). Without it the variables stay empty. On Windows, switching uses the
+same undocumented interface as the Sound settings, because Windows has no public one.
+
 ### Events
 
 Each event can be narrowed to one app with its **App** field and carries `app` and `appName`:
@@ -136,11 +157,13 @@ Everything runs on your computer. The plugin sends nothing about you or your med
 - **SMPlayer and mpv** are read and controlled over their local IPC pipe or socket. A cover is a
   screenshot mpv writes to a temporary file, which is deleted right after it is read.
 - **macOS:** Now Playing is read by running your installed `media-control`; app names and icons come
-  from `mdfind`, `plutil` and `sips`. Nothing third-party ships with the plugin.
+  from `mdfind`, `plutil` and `sips`, sound devices from Core Audio. Nothing third-party ships with the
+  plugin.
 - **Linux:** players are read over the D-Bus session bus with the bundled
   [Tmds.DBus.Protocol](https://github.com/tmds/Tmds.DBus) library (MIT). A player that reports its cover
   as a web address (Spotify does) has the cover downloaded from there, as the desktop's own media controls
-  do. App icons come from the apps' `.desktop` files and the icon theme.
+  do. App icons come from the apps' `.desktop` files and the icon theme. Sound devices are read and
+  switched by running `pactl`.
 
 ## Development
 
