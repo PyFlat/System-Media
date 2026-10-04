@@ -106,6 +106,7 @@ public sealed class PluginIntegration
 		[
 			.. MusicPlayerActions.Common(ResolvePlayer, GetInstances),
 			new ShowNextPlayingAppAction(_selection.ShowNextPlaying),
+			new SetDefaultAudioDeviceAction(() => _platform.AudioDevices, _logger),
 		];
 	}
 
@@ -173,17 +174,43 @@ public sealed class PluginIntegration
 
 	public async ValueTask<VariableReading> ReadAsync(string localId, CancellationToken cancellationToken = default)
 	{
+		if (SystemMediaVariables.DeviceRole(localId) is { } role)
+		{
+			return _platform.AudioDevices is { } devices
+				? VariableReading.Of((await devices.GetDefaultAsync(role, cancellationToken))?.Name)
+				: VariableReading.Unavailable;
+		}
+
 		var state = await _currentState.GetAsync(cancellationToken);
 		return SystemMediaVariables.Read(localId, state);
 	}
 
 	public ValueTask<VariableWriteResult> SetValueAsync(string localId, object? value, CancellationToken cancellationToken = default) =>
-		localId switch
+		SystemMediaVariables.DeviceRole(localId) is { } role
+			? SetDefaultAudioDeviceAsync(role, value, cancellationToken)
+			: localId switch
+			{
+				SystemMediaVariables.VolumeId => MusicPlayerVariableWrites.SetVolumeAsync(_current, value, cancellationToken),
+				SystemMediaVariables.PositionId => MusicPlayerVariableWrites.SeekAsync(_current, value, cancellationToken),
+				_ => ValueTask.FromResult(VariableWriteResult.NotWritable()),
+			};
+
+	private async ValueTask<VariableWriteResult> SetDefaultAudioDeviceAsync(AudioDeviceRole role, object? value, CancellationToken cancellationToken)
+	{
+		if (value?.ToString() is not { Length: > 0 } device)
 		{
-			SystemMediaVariables.VolumeId => MusicPlayerVariableWrites.SetVolumeAsync(_current, value, cancellationToken),
-			SystemMediaVariables.PositionId => MusicPlayerVariableWrites.SeekAsync(_current, value, cancellationToken),
-			_ => ValueTask.FromResult(VariableWriteResult.NotWritable()),
+			return VariableWriteResult.InvalidValue();
+		}
+
+		return await SetDefaultAudioDeviceAction.SwitchAsync(_platform.AudioDevices, role, device, _logger, cancellationToken) switch
+		{
+			SetDefaultAudioDeviceAction.Outcome.Switched => VariableWriteResult.Applied(),
+			SetDefaultAudioDeviceAction.Outcome.NotSupported => VariableWriteResult.Unavailable(Strings.Actions.SetDefaultAudioDevice.NotSupported()),
+			// NotFound would claim the variable itself is missing.
+			SetDefaultAudioDeviceAction.Outcome.NotFound => VariableWriteResult.InvalidValue(Strings.Actions.SetDefaultAudioDevice.DeviceNotFound()),
+			_ => VariableWriteResult.Failed(Strings.Actions.SetDefaultAudioDevice.Failed()),
 		};
+	}
 
 	public Task<DynamicOptionsResult> GetEventOptionsAsync(EventOptionsContext context, CancellationToken cancellationToken)
 	{

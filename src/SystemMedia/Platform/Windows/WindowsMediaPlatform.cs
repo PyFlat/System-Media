@@ -223,6 +223,8 @@ internal sealed class WindowsMediaPlatform : IMediaPlatform
 	public Task<bool> SetVolumePercentAsync(AppIdentity app, int volumePercent, CancellationToken cancellationToken) =>
 		Task.FromResult(AppVolumeMixer.SetVolumePercent(app, volumePercent));
 
+	public IAudioDevices AudioDevices { get; } = new WindowsAudioDevices();
+
 	public IReadOnlyList<IntegrationIssue> GetIssues()
 	{
 		var issues = new List<IntegrationIssue>();

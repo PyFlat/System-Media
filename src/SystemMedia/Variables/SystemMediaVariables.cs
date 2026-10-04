@@ -1,6 +1,7 @@
 using MacroDeck.Localization;
 using MacroDeck.Sdk.MusicPlayer;
 using MacroDeck.Sdk.Variables;
+using SystemMedia.Platform;
 
 namespace SystemMedia.Variables;
 
@@ -53,7 +54,20 @@ internal static class SystemMediaVariables
 		Text("system_media_repeat_mode", Strings.Variables.RepeatMode(), state => state.RepeatMode.ToString().ToLowerInvariant(), _slow),
 	];
 
-	internal static IReadOnlyList<VariableDefinition> All { get; } = [.. _entries.Select(entry => entry.Definition)];
+	// The system's default devices, whatever app is playing. Setting one to a device's name switches to it.
+	private static readonly DeviceEntry[] _devices =
+	[
+		Device("system_media_output_device", Strings.Variables.OutputDevice(), AudioDeviceRole.Output),
+		Device("system_media_input_device", Strings.Variables.InputDevice(), AudioDeviceRole.Input),
+		Device("system_media_communication_output_device", Strings.Variables.CommunicationOutputDevice(), AudioDeviceRole.CommunicationOutput),
+		Device("system_media_communication_input_device", Strings.Variables.CommunicationInputDevice(), AudioDeviceRole.CommunicationInput),
+	];
+
+	internal static IReadOnlyList<VariableDefinition> All { get; } =
+		[.. _entries.Select(entry => entry.Definition), .. _devices.Select(device => device.Definition)];
+
+	internal static AudioDeviceRole? DeviceRole(string localId) =>
+		Array.Find(_devices, candidate => string.Equals(candidate.Definition.ResolvedId, localId, StringComparison.Ordinal))?.Role;
 
 	internal static VariableReading Read(string localId, MusicPlayerState state)
 	{
@@ -81,4 +95,11 @@ internal static class SystemMediaVariables
 		new(VariableDefinition.Eager(name, VariableType.Text, refreshInterval: refresh ?? _normal) with { DisplayName = displayName }, read);
 
 	private sealed record Entry(VariableDefinition Definition, Func<MusicPlayerState, object?> Read);
+
+	private static DeviceEntry Device(string name, LocalizedText displayName, AudioDeviceRole role) =>
+		new(VariableDefinition.Eager(name, VariableType.Text, refreshInterval: _slow)
+			with { DisplayName = displayName, Write = new VariableWriteCapability() },
+			role);
+
+	private sealed record DeviceEntry(VariableDefinition Definition, AudioDeviceRole Role);
 }

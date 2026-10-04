@@ -2,6 +2,8 @@ using MacroDeck.Plugin.Protocol.Capabilities.MusicPlayer;
 using MacroDeck.Plugin.Testing;
 using NUnit.Framework;
 using Serilog;
+using SystemMedia.Platform;
+using SystemMedia.Platform.Windows.Audio;
 using SystemMedia.Platform.Windows;
 
 namespace SystemMedia.Tests.Windows;
@@ -20,6 +22,34 @@ public sealed class WindowsPluginIntegrationTests
 			.DataAs<MusicPlayerStateDto>();
 
 		Assert.That(state!.IsConnected, Is.True);
+	}
+
+	// A machine without a microphone or speakers has no default device, so only what holds either way is checked.
+	[TestCase(nameof(AudioDeviceRole.Output))]
+	[TestCase(nameof(AudioDeviceRole.Input))]
+	[TestCase(nameof(AudioDeviceRole.CommunicationOutput))]
+	[TestCase(nameof(AudioDeviceRole.CommunicationInput))]
+	public async Task A_default_device_is_one_of_the_connected_devices(string roleName)
+	{
+		var role = Enum.Parse<AudioDeviceRole>(roleName);
+		var devices = new WindowsAudioDevices();
+
+		var connected = await devices.GetDevicesAsync(role.IsInput(), CancellationToken.None);
+		var current = await devices.GetDefaultAsync(role, CancellationToken.None);
+
+		Assert.That(connected.Select(device => device.Name), Has.None.Empty);
+		if (current is not null)
+		{
+			Assert.That(connected, Has.Member(current));
+		}
+	}
+
+	[Test]
+	public async Task An_unknown_device_is_not_made_the_default()
+	{
+		var switched = await new WindowsAudioDevices().SetDefaultAsync(AudioDeviceRole.Output, "{0.0.0.00000000}.{unknown}", CancellationToken.None);
+
+		Assert.That(switched, Is.False);
 	}
 
 	// The host asks for issues while the first start is still running.

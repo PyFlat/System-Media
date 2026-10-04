@@ -56,6 +56,9 @@ internal interface IMediaPlatform : IDisposable
 
 	Task<bool> SetVolumePercentAsync(AppIdentity app, int volumePercent, CancellationToken cancellationToken);
 
+	// The system's default sound devices; null where the platform cannot reach them.
+	IAudioDevices? AudioDevices => null;
+
 	IReadOnlyList<IntegrationIssue> GetIssues();
 
 	Task<IssueResolution?> ResolveIssueAsync(string issueId, CancellationToken cancellationToken);
