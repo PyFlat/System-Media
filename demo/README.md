@@ -6,7 +6,8 @@ screenshots. The tracks and apps are listed at the top of
 
 With `make demo` running, `make screenshots` opens Macro Deck's web client in a headless Chrome and steps through
 every scene in DemoMediaPlatform.cs and saves every Music Player tile on the current deck page, in dark mode,
-to `artifacts/screenshots/` as `<scene>-music-player-<n>-<size>.png`, at the same size on every run. It needs Python with Playwright (`pip install playwright`) and Chrome. The first run opens a
+to `artifacts/screenshots/` as `<scene>-music-player-<n>-<size>.png`, at the same size on every run. `make screenshots STORE=1` then pads each onto the 16:9 canvas the store
+crops card artwork to, so a square tile shows whole. It needs Python with Playwright (`pip install playwright`) and Chrome. The first run opens a
 Chrome window to sign in; the session is kept in `artifacts/web-client-profile`.
 
 Put the images it names here (PNG or JPEG): covers such as `afterglow-avenue.png` and app icons such as

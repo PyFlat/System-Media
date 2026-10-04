@@ -33,6 +33,7 @@ src/SystemMedia/
   Players/                  players the system does not see: the Player base class, MpvPlayer, SmPlayer,
                             the watcher that polls each, local sockets and the Qt single-app message
 docs/                       adding-a-player.md, the contributor guide for a new Player
+tools/StoreCanvas.cs        pads the store screenshots onto a 16:9 canvas (make screenshots STORE=1)
 tests/SystemMedia.Tests/    shared tests, plus Windows/ (Windows build only)
 ```
 

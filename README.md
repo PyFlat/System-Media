@@ -173,7 +173,7 @@ make test         # dotnet test
 make run          # run against the installed Macro Deck (make watch for hot reload)
 make stub         # run against a stub host, no Macro Deck needed
 make demo         # run with made-up tracks from demo/, for screenshots
-make screenshots  # while make demo runs: save the deck's Music Player tiles as PNGs
+make screenshots  # while make demo runs: save the deck's Music Player tiles as PNGs (STORE=1 pads to 16:9)
 make pack         # build and inspect this platform's .macroDeckPlugin
 make release     # tag and publish manifest.json's version (VERSION=x.y.z bumps it first)
 ```

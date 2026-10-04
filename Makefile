@@ -28,7 +28,8 @@ help:
 	@echo "make watch          the same, with hot reload / restart on every saved change"
 	@echo "make stub           run the plugin against a disposable stub host (no Macro Deck needed)"
 	@echo "make demo           run against Macro Deck with the made-up sessions in demo/ (store screenshots)"
-	@echo "make screenshots    while make demo runs: capture the deck's widgets from the web client"
+	@echo "make screenshots [STORE=1]"
+	@echo "                    while make demo runs: capture the deck's widgets from the web client (STORE=1 pads to 16:9)"
 	@echo "make pack           build this platform's .macroDeckPlugin ($(RID)) into artifacts/ and inspect it"
 	@echo "make conformance    run the conformance suite, report in conformance.md"
 	@echo "make update         bump every package to its newest release (review the diff)"
@@ -56,8 +57,10 @@ stub:
 demo:
 	export SYSTEM_MEDIA_DEMO="$(CURDIR)/demo" && $(RUN)
 
+# STORE=1 pads each screenshot onto a 16:9 canvas, the shape the store crops card artwork to.
 screenshots:
 	python scripts/screenshots.py
+	$(if $(STORE),dotnet run tools/StoreCanvas.cs -- artifacts/screenshots)
 
 pack:
 	$(PACK)
