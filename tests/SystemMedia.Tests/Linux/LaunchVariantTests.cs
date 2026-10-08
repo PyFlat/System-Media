@@ -33,5 +33,13 @@ public sealed class LaunchVariantTests
 	public void A_class_that_is_the_app_itself_is_no_variant() =>
 		Assert.That(Variant("/usr/lib/firefox/firefox", "--class", "Firefox"), Is.Null);
 
+	[Test]
+	public void An_oversized_or_unprintable_variant_is_ignored()
+	{
+		Assert.That(Variant("/usr/lib/firefox/firefox", "--class", new string('x', 101)), Is.Null);
+		Assert.That(Variant("/usr/lib/firefox/firefox", "--class", "Web\u001b[31mApp"), Is.Null);
+		Assert.That(Variant("/usr/lib/firefox/firefox", "--class", new string('x', 100)), Is.Not.Null);
+	}
+
 	private static string? Variant(params string[] arguments) => LaunchVariant.Of(arguments, "firefox");
 }

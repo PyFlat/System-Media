@@ -3,11 +3,15 @@ namespace SystemMedia.Platform.Linux;
 // The MPRIS instance id changes with every start, so a web app or second profile is named by its launch arguments.
 internal static class LaunchVariant
 {
+	// The variant ends up in the app id, its stored name and the instance list.
+	private const int MaxLength = 100;
+
 	internal static string? Of(IReadOnlyList<string> arguments, string appId)
 	{
 		var variant = Value(arguments, "class") ?? Value(arguments, "name") ?? Last(Value(arguments, "profile"))
 			?? Value(arguments, "P") ?? Last(Value(arguments, "user-data-dir"));
-		return variant is { Length: > 0 } && !string.Equals(variant, appId, StringComparison.OrdinalIgnoreCase) ? variant : null;
+		return variant is { Length: > 0 and <= MaxLength } && !variant.Any(char.IsControl) &&
+			!string.Equals(variant, appId, StringComparison.OrdinalIgnoreCase) ? variant : null;
 	}
 
 	internal static IReadOnlyList<string> ReadArguments(uint processId)
