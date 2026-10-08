@@ -74,7 +74,11 @@ single-configuration integration to `default` and keeps only the first.
 - macOS reports one Now Playing app and has no per-app volume. Do not emulate either.
 - Linux has no system-wide current player; the one that started playing last stands in. MPRIS volume is
   the player's own, so a player without a `Volume` property gets no slider. An app id is the bus name
-  after `org.mpris.MediaPlayer2.` without a `.instance...` suffix, so every instance is one app.
+  after `org.mpris.MediaPlayer2.` without a `.instance...` suffix, so every instance is one app, unless its
+  process was launched with a window class or profile of its own (a web app, a second Firefox profile):
+  that instance becomes `<app>@<variant>`, read once from the bus owner's `/proc/<pid>/cmdline`
+  (`LaunchVariant`), and is named by the `.desktop` file of that class if there is one. A plain launch
+  never gets a variant, so plain app ids, and the widgets bound to them, never change.
 - Sound devices are an `IAudioDevices` behind `IMediaPlatform.AudioDevices`: Core Audio on Windows and
   macOS, `pactl --format=json` on Linux (it ships with PulseAudio and `pipewire-pulse`, run with
   `LC_NUMERIC=C` because some locales break its JSON). Only Windows has communication defaults; elsewhere

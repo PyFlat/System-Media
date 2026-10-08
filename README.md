@@ -27,6 +27,8 @@ Spotify, Firefox, Chromium-based browsers, VLC, Rhythmbox, Elisa and most others
 `mpv-mpris` plugin). Nothing has to be installed. Macro Deck has to run inside your desktop session to
 reach the session bus; otherwise the integration shows an issue with a **Try again** button. Linux has no
 system-wide "current" player, so *Any app* treats the player that started playing last as current.
+A browser started as a web app (Linux Mint's Web Apps, Peppermint's Ice) or with a profile of its own is
+listed as an app of its own, named after the web app; all other windows of that browser are one app.
 
 ## Usage
 
@@ -162,8 +164,9 @@ Everything runs on your computer. The plugin sends nothing about you or your med
 - **Linux:** players are read over the D-Bus session bus with the bundled
   [Tmds.DBus.Protocol](https://github.com/tmds/Tmds.DBus) library (MIT). A player that reports its cover
   as a web address (Spotify does) has the cover downloaded from there, as the desktop's own media controls
-  do. App icons come from the apps' `.desktop` files and the icon theme. Sound devices are read and
-  switched by running `pactl`.
+  do. App icons come from the apps' `.desktop` files and the icon theme. A browser's launch arguments are
+  read from `/proc` to tell its web apps and profiles apart. Sound devices are read and switched by
+  running `pactl`.
 
 ## Development
 

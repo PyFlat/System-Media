@@ -348,14 +348,31 @@ internal sealed class LinuxMediaPlatform : IMediaPlatform
 		Replace(current);
 	}
 
-	private static async Task<MprisPlayer> ReadRootAsync(MprisBus bus, string busName)
+	private async Task<MprisPlayer> ReadRootAsync(MprisBus bus, string busName)
 	{
 		var root = await bus.GetAllAsync(busName, MprisBus.RootInterface).WaitAsync(_callTimeout);
-		return new MprisPlayer(
+		var player = new MprisPlayer(
 			busName,
 			root.GetValueOrDefault("Identity") as string,
 			root.GetValueOrDefault("DesktopEntry") as string,
 			new Dictionary<string, object?>());
+		return player.IsInstance && await LaunchVariantOfAsync(bus, player) is { } variant
+			? player.LaunchedAs(variant, _desktop.NameOf(variant))
+			: player;
+	}
+
+	// A sandboxed player (Flatpak) is owned by its bus proxy, whose arguments name no variant.
+	private static async Task<string?> LaunchVariantOfAsync(MprisBus bus, MprisPlayer player)
+	{
+		try
+		{
+			var processId = await bus.GetProcessIdAsync(player.BusName).WaitAsync(_callTimeout);
+			return LaunchVariant.Of(LaunchVariant.ReadArguments(processId), player.AppId);
+		}
+		catch (Exception exception) when (IsCallFailure(exception))
+		{
+			return null;
+		}
 	}
 
 	private void Replace(Dictionary<string, MprisPlayer> current)
