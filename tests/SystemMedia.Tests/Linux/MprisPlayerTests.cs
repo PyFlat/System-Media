@@ -17,6 +17,25 @@ public sealed class MprisPlayerTests
 		Assert.That(MprisPlayer.AppIdOf(busName), Is.EqualTo(appId));
 
 	[Test]
+	public void An_instance_launched_as_a_variant_is_an_app_of_its_own()
+	{
+		var firefox = new MprisPlayer("org.mpris.MediaPlayer2.firefox.instance_1_918", "Mozilla Firefox", "firefox", new Dictionary<string, object?>());
+
+		var webApp = firefox.LaunchedAs("WebApp-SpotifyWeb3778", "Spotify");
+		var profile = firefox.LaunchedAs("work", desktopName: null);
+
+		Assert.That(firefox.IsInstance, Is.True);
+		Assert.That(firefox.AppId, Is.EqualTo("firefox"));
+		Assert.That(webApp.AppId, Is.EqualTo("firefox@WebApp-SpotifyWeb3778"));
+		Assert.That(webApp.Identity, Is.EqualTo("Spotify"));
+		Assert.That(webApp.DesktopEntry, Is.EqualTo("WebApp-SpotifyWeb3778"));
+		Assert.That(profile.AppId, Is.EqualTo("firefox@work"));
+		Assert.That(profile.Identity, Is.EqualTo("Mozilla Firefox (work)"));
+		Assert.That(profile.DesktopEntry, Is.EqualTo("firefox"));
+		Assert.That(Player(new()).IsInstance, Is.False);
+	}
+
+	[Test]
 	public void A_playing_track_becomes_a_snapshot_with_its_timeline()
 	{
 		var snapshot = Player(new()

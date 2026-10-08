@@ -45,6 +45,14 @@ internal sealed class MprisBus : IDisposable
 			null);
 	}
 
+	internal Task<uint> GetProcessIdAsync(string busName)
+	{
+		using var writer = _connection.GetMessageWriter();
+		writer.WriteMethodCallHeader("org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus", "GetConnectionUnixProcessID", "s", MessageFlags.None);
+		writer.WriteString(busName);
+		return _connection.CallMethodAsync(writer.CreateMessage(), static (message, _) => message.GetBodyReader().ReadUInt32(), null);
+	}
+
 	internal Task CallAsync(string busName, string member)
 	{
 		using var writer = _connection.GetMessageWriter();

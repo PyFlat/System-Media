@@ -7,7 +7,12 @@ internal sealed record MprisPlayer(string BusName, string? Identity, string? Des
 {
 	private const string NoTrack = "/org/mpris/MediaPlayer2/TrackList/NoTrack";
 
-	internal string AppId => AppIdOf(BusName);
+	internal string? Variant { get; private init; }
+
+	// "@" never appears in a bus name, so a variant cannot collide with another player.
+	internal string AppId => Variant is null ? AppIdOf(BusName) : $"{AppIdOf(BusName)}@{Variant}";
+
+	internal bool IsInstance => BusName.Contains(".instance", StringComparison.Ordinal);
 
 	internal bool IsPlaying => string.Equals(Text("PlaybackStatus"), "Playing", StringComparison.Ordinal);
 
@@ -32,6 +37,14 @@ internal sealed record MprisPlayer(string BusName, string? Identity, string? Des
 		var instance = name.IndexOf(".instance", StringComparison.Ordinal);
 		return instance > 0 ? name[..instance] : name;
 	}
+
+	// A web app's own .desktop file is named after its window class and gives it its name and icon.
+	internal MprisPlayer LaunchedAs(string variant, string? desktopName) => this with
+	{
+		Variant = variant,
+		Identity = desktopName ?? $"{Identity ?? AppIdOf(BusName)} ({variant})",
+		DesktopEntry = desktopName is null ? DesktopEntry : variant,
+	};
 
 	internal MediaSnapshot ToSnapshot(DateTimeOffset readAt)
 	{

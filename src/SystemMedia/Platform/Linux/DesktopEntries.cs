@@ -50,9 +50,12 @@ internal sealed class DesktopEntries(IReadOnlyList<string> dataDirectories)
 		}
 	}
 
-	// Desktop actions carry Icon= keys of their own.
-	internal static string? IconNameOf(IEnumerable<string> desktopFileLines)
+	internal string? NameOf(string desktopEntry) => IsFileName(desktopEntry) ? ValueOf(desktopEntry, "Name") : null;
+
+	// Desktop actions carry keys of their own.
+	internal static string? ValueOf(IEnumerable<string> desktopFileLines, string key)
 	{
+		var prefix = key + "=";
 		var inEntry = false;
 		foreach (var raw in desktopFileLines)
 		{
@@ -63,9 +66,9 @@ internal sealed class DesktopEntries(IReadOnlyList<string> dataDirectories)
 				continue;
 			}
 
-			if (inEntry && line.StartsWith("Icon=", StringComparison.Ordinal) && line.Length > "Icon=".Length)
+			if (inEntry && line.StartsWith(prefix, StringComparison.Ordinal) && line.Length > prefix.Length)
 			{
-				return line["Icon=".Length..].Trim();
+				return line[prefix.Length..].Trim();
 			}
 		}
 
@@ -74,7 +77,7 @@ internal sealed class DesktopEntries(IReadOnlyList<string> dataDirectories)
 
 	private string? FindIcon(string? desktopEntry, string appId)
 	{
-		var iconName = IconNameOf(desktopEntry ?? appId) ?? IconNameOf(appId.ToLowerInvariant()) ?? appId.ToLowerInvariant();
+		var iconName = ValueOf(desktopEntry ?? appId, "Icon") ?? ValueOf(appId.ToLowerInvariant(), "Icon") ?? appId.ToLowerInvariant();
 		if (Path.IsPathRooted(iconName))
 		{
 			return iconName.EndsWith(".png", StringComparison.OrdinalIgnoreCase) && File.Exists(iconName) ? iconName : null;
@@ -86,7 +89,7 @@ internal sealed class DesktopEntries(IReadOnlyList<string> dataDirectories)
 		return candidates.FirstOrDefault(File.Exists);
 	}
 
-	private string? IconNameOf(string desktopEntry)
+	private string? ValueOf(string desktopEntry, string key)
 	{
 		var fileName = desktopEntry.EndsWith(".desktop", StringComparison.Ordinal) ? desktopEntry : desktopEntry + ".desktop";
 		foreach (var directory in dataDirectories)
@@ -99,7 +102,7 @@ internal sealed class DesktopEntries(IReadOnlyList<string> dataDirectories)
 
 			try
 			{
-				return IconNameOf(File.ReadLines(path));
+				return ValueOf(File.ReadLines(path), key);
 			}
 			catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
 			{

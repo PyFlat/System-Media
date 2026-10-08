@@ -61,6 +61,18 @@ public sealed class DesktopEntriesTests
 		Assert.That(new DesktopEntries([_root]).IconPath("unknown", "unknown"), Is.Null);
 
 	[Test]
+	public void A_web_app_is_named_by_its_own_desktop_file()
+	{
+		Write("applications/WebApp-SpotifyWeb3778.desktop", "[Desktop Entry]\nName=Spotify\n\n[Desktop Action new]\nName=Other\n");
+		Write("outside.desktop", "[Desktop Entry]\nName=Outside\n");
+		var entries = new DesktopEntries([_root]);
+
+		Assert.That(entries.NameOf("WebApp-SpotifyWeb3778"), Is.EqualTo("Spotify"));
+		Assert.That(entries.NameOf("../outside"), Is.Null);
+		Assert.That(entries.NameOf("unknown"), Is.Null);
+	}
+
+	[Test]
 	public void The_data_directories_follow_the_xdg_defaults()
 	{
 		var environment = new Dictionary<string, string?> { ["HOME"] = "/home/me" };
