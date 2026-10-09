@@ -53,8 +53,8 @@ internal sealed record NowPlayingInfo
 			_ => null,
 		},
 		StartTime = TimeSpan.Zero,
-		EndTime = DurationMicros is { } duration ? TimeSpan.FromMicroseconds(duration) : TimeSpan.Zero,
-		Position = ElapsedMicros is { } elapsed ? TimeSpan.FromMicroseconds(elapsed) : TimeSpan.Zero,
+		EndTime = DurationMicros is { } duration ? MediaTime.FromMicroseconds(duration) ?? TimeSpan.Zero : TimeSpan.Zero,
+		Position = ElapsedMicros is { } elapsed ? MediaTime.FromMicroseconds(elapsed) ?? TimeSpan.Zero : TimeSpan.Zero,
 		LastUpdatedTime = TimestampEpochMicros is { } stamp
 			? DateTimeOffset.FromUnixTimeMilliseconds(stamp / 1000)
 			: DateTimeOffset.MinValue,
