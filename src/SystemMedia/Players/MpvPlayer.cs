@@ -233,9 +233,7 @@ internal class MpvPlayer(IReadOnlyList<string> sockets) : Player
 	}
 
 	private static TimeSpan? Seconds(JsonElement? value) =>
-		value is { ValueKind: JsonValueKind.Number } number && number.GetDouble() is var seconds && seconds >= 0 && double.IsFinite(seconds)
-			? TimeSpan.FromSeconds(seconds)
-			: null;
+		value is { ValueKind: JsonValueKind.Number } number ? MediaTime.FromSeconds(number.GetDouble()) : null;
 
 	private static void TryDelete(string file)
 	{

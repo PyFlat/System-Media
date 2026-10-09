@@ -101,6 +101,19 @@ public sealed class MprisPlayerTests
 	}
 
 	[Test]
+	public void A_length_too_long_for_a_timespan_counts_as_none()
+	{
+		var snapshot = Player(new()
+		{
+			["Metadata"] = new Dictionary<string, object?> { ["mpris:length"] = long.MaxValue },
+			["Position"] = long.MaxValue,
+		}).ToSnapshot(_readAt);
+
+		Assert.That(snapshot.HasDuration, Is.False);
+		Assert.That(snapshot.Position, Is.EqualTo(TimeSpan.Zero));
+	}
+
+	[Test]
 	public void The_no_track_id_is_not_a_track_to_seek_in()
 	{
 		Assert.That(Player(Metadata("mpris:trackid", "/org/mpris/MediaPlayer2/TrackList/NoTrack")).TrackId, Is.Null);

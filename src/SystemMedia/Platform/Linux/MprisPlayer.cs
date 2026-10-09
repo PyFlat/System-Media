@@ -75,12 +75,15 @@ internal sealed record MprisPlayer(string BusName, string? Identity, string? Des
 				_ => null,
 			},
 			StartTime = TimeSpan.Zero,
-			EndTime = length is > 0 ? TimeSpan.FromMicroseconds(length.Value) : TimeSpan.Zero,
-			Position = PositionMicros is > 0 ? TimeSpan.FromMicroseconds(PositionMicros.Value) : TimeSpan.Zero,
+			EndTime = Duration(length),
+			Position = Duration(PositionMicros),
 			// Position is fetched on every read, so it is current as of now.
 			LastUpdatedTime = readAt,
 		};
 	}
+
+	private static TimeSpan Duration(double? micros) =>
+		micros is { } value ? MediaTime.FromMicroseconds(value) ?? TimeSpan.Zero : TimeSpan.Zero;
 
 	private IReadOnlyDictionary<string, object?> Metadata =>
 		Properties.GetValueOrDefault("Metadata") as IReadOnlyDictionary<string, object?> ?? _empty;
