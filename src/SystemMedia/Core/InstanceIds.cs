@@ -19,7 +19,7 @@ internal static class InstanceIds
 		return slug.Length == 0 ? AppPrefix + hash : $"{AppPrefix}{slug}-{hash}";
 	}
 
-	private static string Slug(string value)
+	internal static string Slug(string value)
 	{
 		var builder = new StringBuilder(Math.Min(value.Length, MaxSlugLength));
 		foreach (var character in value)

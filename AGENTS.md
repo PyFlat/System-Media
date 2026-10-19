@@ -19,7 +19,8 @@ src/SystemMedia/
                             thumbnail history, "any app" picker, instance ids, remembered apps, settings,
                             YouTube correction
   Events/                   event definitions, change detection, the once-a-second watcher
-  Variables/                deck variables for the current session and the default sound devices
+  Variables/                deck variables for the current session and the default sound devices, and a
+                            catalog with each known app's own (pushed while subscribed)
   Platform/
     IMediaPlatform.cs       the interface every OS backend implements
     IAudioDevices.cs        the default sound devices, read and switched per OS
@@ -45,7 +46,8 @@ Look there instead of guessing.
 
 **Public API.** These are persisted in users' widgets, templates and automations. Renaming one breaks them:
 
-- instance ids (`InstanceIds.ForApp`, `InstanceIds.Current`; a test pins the exact output)
+- instance ids (`InstanceIds.ForApp`, `InstanceIds.Current`; a test pins the exact output) and the per-app catalog
+  variable ids built from them (`system-media-<instance id>-<variable>`), which the host keeps for linked variables
 - event ids, event parameter names and variable names (`system_media_*`)
 - player app ids, `player:<Player.Id>` (`player:mpv`, `player:smplayer`)
 - the data files `known-apps.json` (its `appUserModelId` field is the 1.x name), `settings.json` and
@@ -171,6 +173,9 @@ make build && make test
 dotnet test SystemMedia.slnx -p:SystemMediaWindows=false  # the non-Windows variant, incl. the Linux tests
 make conformance                                          # after changing capability shape, cancellation or the manifest
 ```
+
+`make conformance` runs in demo mode: the suite runs actions and writes variables, which would otherwise
+pause, skip, seek or switch whatever is playing on the machine.
 
 Some tests run against the machine's real media sessions and only assert what holds whether or not
 something plays. To see real apps, use `make run` while a browser or Spotify plays.
