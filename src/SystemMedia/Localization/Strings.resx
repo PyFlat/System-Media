@@ -97,6 +97,12 @@
   <data name="Variables.RepeatMode" xml:space="preserve">
     <value>Repeat mode</value>
   </data>
+  <data name="Variables.ForApp" xml:space="preserve">
+    <value>{app}: {variable}</value>
+  </data>
+  <data name="Variables.AppPlaceholder" xml:space="preserve">
+    <value>App</value>
+  </data>
   <data name="Variables.OutputDevice" xml:space="preserve">
     <value>Default output device</value>
   </data>

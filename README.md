@@ -75,6 +75,12 @@ For whatever is playing right now (the same as *Any app*):
 | `system_media_volume`                                                  | The app's volume in percent; can be set      |
 | `system_media_shuffle_enabled`, `system_media_repeat_mode`             | `repeat_mode` is `off`, `track` or `context` |
 
+Every app listed as an instance also has its own copy of these, except the app name, so a "Now Playing" text
+can follow one player while another plays too. The app's part of the name is its app id made safe, plus a
+short code that keeps two apps apart, e.g. `system_media_vlc_exe_1a2b3c4d_artist`. Pick them from the
+variable list rather than typing them. Only the first 24 apps get their own variables, because a plugin may
+offer at most 256.
+
 ### Sound devices
 
 Whatever is playing, these name the system's default sound devices:

@@ -1,4 +1,5 @@
 using MacroDeck.Sdk.MusicPlayer;
+using MacroDeck.Sdk.Variables;
 using NUnit.Framework;
 using SystemMedia.Platform;
 using SystemMedia.Variables;
@@ -68,6 +69,55 @@ public sealed class SystemMediaVariablesTests
 		var reading = SystemMediaVariables.Read(SystemMediaVariables.PositionId, _playing);
 
 		Assert.That(reading.Max, Is.EqualTo(256));
+	}
+
+	[TestCase("Spotify.exe")]
+	[TestCase("Microsoft.ZuneMusic_8wekyb3d8bbwe!Microsoft.ZuneMusic.Very.Long.Application.Identifier.That.Exceeds.Limits")]
+	[TestCase("---")]
+	public void Every_app_variable_has_a_valid_id_of_its_own(string appId)
+	{
+		var ids = SystemMediaVariables.ForApp(appId, "App").Select(pair => pair.Definition.ResolvedId).ToList();
+
+		Assert.That(ids, Has.All.Matches(InstanceIdsTests.LocalIdPattern).And.All.Length.LessThanOrEqualTo(64));
+		Assert.That(ids, Is.Unique);
+		Assert.That(ids, Has.None.AnyOf(SystemMediaVariables.All.Select(variable => variable.ResolvedId).ToArray()));
+	}
+
+	[Test]
+	public void An_app_variable_is_named_after_the_app_and_reads_like_its_any_app_variable()
+	{
+		var (definition, currentId) = SystemMediaVariables.ForApp("Spotify.exe", "Spotify").Single(pair => pair.Definition.Name!.EndsWith("_artist", StringComparison.Ordinal));
+
+		Assert.That(definition.Name, Is.EqualTo("system_media_spotify_exe_b527fa0a_artist"));
+		Assert.That(currentId, Is.EqualTo("system-media-artist"));
+	}
+
+	[Test]
+	public void App_variables_are_declared_as_templates_without_an_id()
+	{
+		Assert.That(SystemMediaVariables.AppTemplates.Select(template => template.Name), Has.All.StartsWith("system_media_<app>_"));
+		Assert.That(SystemMediaVariables.AppTemplates.Select(template => template.ResolvedId), Has.All.Null);
+		Assert.That(SystemMediaVariables.AppTemplates, Has.Count.EqualTo(SystemMediaVariables.PerApp));
+	}
+
+	[Test]
+	public void Apps_past_the_eager_variable_limit_get_no_variables()
+	{
+		var apps = Enumerable.Range(0, AppVariables.MaxApps + 3).Select(index => ($"app{index}", $"App {index}"));
+
+		var variables = new AppVariables(apps);
+
+		Assert.That(variables.Definitions, Has.Count.EqualTo(AppVariables.MaxApps * SystemMediaVariables.PerApp));
+		Assert.That(SystemMediaVariables.All.Count + variables.Definitions.Count, Is.LessThanOrEqualTo(VariableLimits.MaxEagerVariablesPerProvider));
+	}
+
+	[Test]
+	public void An_app_variable_id_leads_back_to_its_app()
+	{
+		var variables = new AppVariables([("Spotify.exe", "Spotify")]);
+
+		Assert.That(variables.Find("system-media-spotify-exe-b527fa0a-volume"), Is.EqualTo(new AppVariables.Target("Spotify.exe", SystemMediaVariables.VolumeId)));
+		Assert.That(variables.Find(SystemMediaVariables.VolumeId), Is.Null);
 	}
 
 	[Test]

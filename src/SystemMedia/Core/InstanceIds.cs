@@ -11,20 +11,33 @@ internal static class InstanceIds
 
 	private const string AppPrefix = "app-";
 	private const int MaxSlugLength = 40;
+	// A variable id may only be 64 characters long, including its prefix and the longest variable name.
+	private const int MaxVariableSlugLength = 22;
 
 	internal static string ForApp(string appUserModelId)
 	{
-		var hash = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(appUserModelId)).AsSpan(0, 4));
-		var slug = Slug(appUserModelId);
+		var hash = Hash(appUserModelId);
+		var slug = Slug(appUserModelId, MaxSlugLength);
 		return slug.Length == 0 ? AppPrefix + hash : $"{AppPrefix}{slug}-{hash}";
 	}
 
-	private static string Slug(string value)
+	// The app's part of its variables' ids. Templates persist the names, so this mapping must never change either.
+	internal static string ForAppVariables(string appUserModelId)
 	{
-		var builder = new StringBuilder(Math.Min(value.Length, MaxSlugLength));
+		var hash = Hash(appUserModelId);
+		var slug = Slug(appUserModelId, MaxVariableSlugLength);
+		return slug.Length == 0 ? hash : $"{slug}-{hash}";
+	}
+
+	private static string Hash(string value) =>
+		Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(value)).AsSpan(0, 4));
+
+	private static string Slug(string value, int maxLength)
+	{
+		var builder = new StringBuilder(Math.Min(value.Length, maxLength));
 		foreach (var character in value)
 		{
-			if (builder.Length >= MaxSlugLength)
+			if (builder.Length >= maxLength)
 			{
 				break;
 			}

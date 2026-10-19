@@ -45,7 +45,8 @@ Look there instead of guessing.
 
 **Public API.** These are persisted in users' widgets, templates and automations. Renaming one breaks them:
 
-- instance ids (`InstanceIds.ForApp`, `InstanceIds.Current`; a test pins the exact output)
+- instance ids (`InstanceIds.ForApp`, `InstanceIds.Current`) and the app part of per-app variable names
+  (`InstanceIds.ForAppVariables`); tests pin the exact output
 - event ids, event parameter names and variable names (`system_media_*`)
 - player app ids, `player:<Player.Id>` (`player:mpv`, `player:smplayer`)
 - the data files `known-apps.json` (its `appUserModelId` field is the 1.x name), `settings.json` and

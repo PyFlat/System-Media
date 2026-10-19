@@ -1,6 +1,7 @@
 using MacroDeck.Localization;
 using MacroDeck.Sdk.MusicPlayer;
 using MacroDeck.Sdk.Variables;
+using SystemMedia.Core;
 using SystemMedia.Platform;
 
 namespace SystemMedia.Variables;
@@ -11,13 +12,16 @@ internal static class SystemMediaVariables
 	internal const string PositionId = "system-media-position";
 	internal const string VolumeId = "system-media-volume";
 
+	private const string NamePrefix = "system_media_";
+	private const string AppNameName = NamePrefix + "app_name";
+
 	private static readonly TimeSpan _fast = TimeSpan.FromSeconds(1);
 	private static readonly TimeSpan _normal = TimeSpan.FromSeconds(2);
 	private static readonly TimeSpan _slow = TimeSpan.FromSeconds(5);
 
 	private static readonly Entry[] _entries =
 	[
-		Text("system_media_app_name", Strings.Variables.AppName(), state => state.DeviceName),
+		Text(AppNameName, Strings.Variables.AppName(), state => state.DeviceName),
 		Text("system_media_track_name", Strings.Variables.TrackName(), state => state.TrackName),
 		Text("system_media_artist", Strings.Variables.Artist(), state => state.Artists.Count == 0 ? null : string.Join(", ", state.Artists)),
 		Text("system_media_album", Strings.Variables.Album(), state => state.AlbumName),
@@ -66,6 +70,23 @@ internal static class SystemMediaVariables
 	internal static IReadOnlyList<VariableDefinition> All { get; } =
 		[.. _entries.Select(entry => entry.Definition), .. _devices.Select(device => device.Definition)];
 
+	// An app's own variables need no app name: the app is in their name.
+	private static readonly Entry[] _appEntries = [.. _entries.Where(entry => entry.Definition.Name != AppNameName)];
+
+	internal static int PerApp => _appEntries.Length;
+
+	internal static IReadOnlyList<VariableDefinition> AppTemplates { get; } =
+	[
+		.. _appEntries.Select(entry => ForApp(entry, VariableNameTemplate.Placeholder("app"), Strings.Variables.AppPlaceholder())),
+	];
+
+	// Each one is paired with the id of the "any app" variable it reads like.
+	internal static IEnumerable<(VariableDefinition Definition, string CurrentId)> ForApp(string appId, string appName)
+	{
+		var key = InstanceIds.ForAppVariables(appId).Replace('-', '_');
+		return _appEntries.Select(entry => (ForApp(entry, key, appName), entry.Definition.ResolvedId!));
+	}
+
 	internal static AudioDeviceRole? DeviceRole(string localId) =>
 		Array.Find(_devices, candidate => string.Equals(candidate.Definition.ResolvedId, localId, StringComparison.Ordinal))?.Role;
 
@@ -93,6 +114,13 @@ internal static class SystemMediaVariables
 
 	private static Entry Text(string name, LocalizedText displayName, Func<MusicPlayerState, object?> read, TimeSpan? refresh = null) =>
 		new(VariableDefinition.Eager(name, VariableType.Text, refreshInterval: refresh ?? _normal) with { DisplayName = displayName }, read);
+
+	private static VariableDefinition ForApp(Entry entry, string key, LocalizedText appName) =>
+		entry.Definition with
+		{
+			Name = $"{NamePrefix}{key}_{entry.Definition.Name![NamePrefix.Length..]}",
+			DisplayName = Strings.Variables.ForApp(appName, entry.Definition.DisplayName),
+		};
 
 	private sealed record Entry(VariableDefinition Definition, Func<MusicPlayerState, object?> Read);
 

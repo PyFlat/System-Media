@@ -59,6 +59,7 @@ public sealed class PluginIntegration
 	private readonly Lock _appsGate = new();
 
 	private volatile KnownApp[] _apps = [];
+	private volatile AppVariables _appVariables = AppVariables.None;
 	private bool _rememberedAppsLoaded;
 
 	public PluginIntegration(IPluginCatalogNotifier catalog, IOptions<PluginHostOptions> hostOptions, ILogger logger)
@@ -112,7 +113,9 @@ public sealed class PluginIntegration
 
 	public IReadOnlyList<IActionDefinition> Actions { get; }
 
-	public IReadOnlyList<VariableDefinition> Variables => SystemMediaVariables.All;
+	public IReadOnlyList<VariableDefinition> Variables => [.. SystemMediaVariables.All, .. _appVariables.Definitions];
+
+	public IReadOnlyList<VariableDefinition> DeclaredVariables => [.. SystemMediaVariables.All, .. SystemMediaVariables.AppTemplates];
 
 	public IReadOnlyList<EventDefinition> EventDefinitions => MediaEvents.All;
 
@@ -135,7 +138,7 @@ public sealed class PluginIntegration
 
 		if (RememberActiveApps() || changed)
 		{
-			_catalog.CatalogChanged(CapabilityKinds.MusicPlayer, reason: "media apps discovered");
+			AppsChanged("media apps discovered");
 		}
 
 		_events.Start(context.Events);
@@ -181,19 +184,38 @@ public sealed class PluginIntegration
 				: VariableReading.Unavailable;
 		}
 
+		if (_appVariables.Find(localId) is { } target)
+		{
+			return FindApp(target.AppId) is { } app
+				? SystemMediaVariables.Read(target.CurrentId, await app.State.GetAsync(cancellationToken))
+				: VariableReading.Unavailable;
+		}
+
 		var state = await _currentState.GetAsync(cancellationToken);
 		return SystemMediaVariables.Read(localId, state);
 	}
 
-	public ValueTask<VariableWriteResult> SetValueAsync(string localId, object? value, CancellationToken cancellationToken = default) =>
-		SystemMediaVariables.DeviceRole(localId) is { } role
-			? SetDefaultAudioDeviceAsync(role, value, cancellationToken)
-			: localId switch
-			{
-				SystemMediaVariables.VolumeId => MusicPlayerVariableWrites.SetVolumeAsync(_current, value, cancellationToken),
-				SystemMediaVariables.PositionId => MusicPlayerVariableWrites.SeekAsync(_current, value, cancellationToken),
-				_ => ValueTask.FromResult(VariableWriteResult.NotWritable()),
-			};
+	public ValueTask<VariableWriteResult> SetValueAsync(string localId, object? value, CancellationToken cancellationToken = default)
+	{
+		if (SystemMediaVariables.DeviceRole(localId) is { } role)
+		{
+			return SetDefaultAudioDeviceAsync(role, value, cancellationToken);
+		}
+
+		IMusicPlayer? player = _current;
+		if (_appVariables.Find(localId) is { } target)
+		{
+			player = FindApp(target.AppId)?.Player;
+			localId = target.CurrentId;
+		}
+
+		return localId switch
+		{
+			SystemMediaVariables.VolumeId => MusicPlayerVariableWrites.SetVolumeAsync(player, value, cancellationToken),
+			SystemMediaVariables.PositionId => MusicPlayerVariableWrites.SeekAsync(player, value, cancellationToken),
+			_ => ValueTask.FromResult(VariableWriteResult.NotWritable()),
+		};
+	}
 
 	private async ValueTask<VariableWriteResult> SetDefaultAudioDeviceAsync(AudioDeviceRole role, object? value, CancellationToken cancellationToken)
 	{
@@ -232,7 +254,7 @@ public sealed class PluginIntegration
 		var resolution = await _platform.ResolveIssueAsync(issueId, cancellationToken);
 		if (resolution is { Success: true } && RememberActiveApps())
 		{
-			_catalog.CatalogChanged(CapabilityKinds.MusicPlayer, reason: "media issue resolved");
+			AppsChanged("media issue resolved");
 		}
 
 		return resolution ?? IssueResolution.Failed(Strings.Issues.Unknown());
@@ -350,12 +372,21 @@ public sealed class PluginIntegration
 	private IMusicPlayer? ResolvePlayer(string? instanceId) =>
 		string.IsNullOrEmpty(instanceId) ? _current : GetPlayer(instanceId);
 
+	private KnownApp? FindApp(string appId) =>
+		Array.Find(_apps, app => string.Equals(app.AppId, appId, StringComparison.Ordinal));
+
 	private void OnSessionsChanged(object? sender, EventArgs e)
 	{
 		if (RememberActiveApps())
 		{
-			_catalog.CatalogChanged(CapabilityKinds.MusicPlayer, reason: "media apps changed");
+			AppsChanged("media apps changed");
 		}
+	}
+
+	private void AppsChanged(string reason)
+	{
+		_catalog.CatalogChanged(CapabilityKinds.MusicPlayer, reason: reason);
+		_catalog.CatalogChanged(CapabilityKinds.Variables, reason: reason);
 	}
 
 	private async Task TryStartPlatformAsync(CancellationToken cancellationToken)
@@ -424,17 +455,20 @@ public sealed class PluginIntegration
 				continue;
 			}
 
+			var player = CreatePlayer(app.AppId);
 			merged.Add(new KnownApp(
 				InstanceIds.ForApp(app.AppId),
 				app.AppId,
 				name ?? app.Name ?? _platform.ResolveApp(app.AppId).DisplayName,
-				CreatePlayer(app.AppId)));
+				player,
+				new StateSnapshotCache(player.GetStateAsync, TimeProvider.System)));
 			changed = true;
 		}
 
 		if (changed)
 		{
 			_apps = [.. merged];
+			_appVariables = new AppVariables(merged.Select(known => (known.AppId, known.DisplayName)));
 		}
 
 		return changed;
@@ -443,5 +477,5 @@ public sealed class PluginIntegration
 	private SessionMusicPlayer CreatePlayer(string? appId, TimeSpan cycleInterval = default) =>
 		new(_platform, _selection, appId, TimeProvider.System, _youTube, _thumbnails, cycleInterval);
 
-	private sealed record KnownApp(string InstanceId, string AppId, string DisplayName, SessionMusicPlayer Player);
+	private sealed record KnownApp(string InstanceId, string AppId, string DisplayName, SessionMusicPlayer Player, StateSnapshotCache State);
 }
