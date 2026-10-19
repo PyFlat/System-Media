@@ -67,9 +67,11 @@ public sealed class PluginIntegration
 		_catalog = catalog;
 		_logger = logger.ForContext<PluginIntegration>();
 		var dataDirectory = hostOptions.Value.DataDirectory;
+		var demo = false;
 #if DEBUG
-		// Made-up apps must not be remembered as real ones.
-		if (Environment.GetEnvironmentVariable(Demo.DemoMediaPlatform.EnvironmentVariable) is { Length: > 0 })
+		// Made-up apps must not be remembered as real ones, and conformance runs here must not control a real player.
+		demo = Environment.GetEnvironmentVariable(Demo.DemoMediaPlatform.EnvironmentVariable) is { Length: > 0 };
+		if (demo)
 		{
 			dataDirectory = null;
 		}
@@ -80,9 +82,7 @@ public sealed class PluginIntegration
 		_youTube = new YouTubePageCorrector(_youTubeLookup.LookUpAsync, TimeProvider.System, _logger);
 		_platform = new CompositeMediaPlatform(
 			MediaPlatformFactory.Create(_logger),
-			[
-				new PlayersSource(_logger, TimeProvider.System),
-			]);
+			demo ? [] : [new PlayersSource(_logger, TimeProvider.System)]);
 		_selection = new CurrentAppSelection(_platform, TimeProvider.System);
 		_current = CreatePlayer(appId: null);
 		_currentState = new StateSnapshotCache(_current.GetStateAsync, TimeProvider.System);

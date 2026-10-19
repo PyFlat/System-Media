@@ -173,6 +173,9 @@ dotnet test SystemMedia.slnx -p:SystemMediaWindows=false  # the non-Windows vari
 make conformance                                          # after changing capability shape, cancellation or the manifest
 ```
 
+`make conformance` runs in demo mode: the suite runs actions and writes variables, which would otherwise
+pause, skip, seek or switch whatever is playing on the machine.
+
 Some tests run against the machine's real media sessions and only assert what holds whether or not
 something plays. To see real apps, use `make run` while a browser or Spotify plays.
 

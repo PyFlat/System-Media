@@ -65,8 +65,9 @@ screenshots:
 pack:
 	$(PACK)
 
+# Demo mode: the suite runs actions and writes variables, which would pause, skip or seek what is playing.
 conformance:
-	macrodeck-plugin test --project $(PROJECT) --report markdown --output conformance.md
+	export SYSTEM_MEDIA_DEMO="$(CURDIR)/demo" && macrodeck-plugin test --project $(PROJECT) --report markdown --output conformance.md
 
 update:
 	dotnet package update
