@@ -39,7 +39,7 @@ jobs:
         run: dotnet test SystemMedia.slnx --no-build --configuration Release
 
       - name: Install macrodeck-plugin CLI
-        run: dotnet tool install --global MacroDeck.Plugin.Cli --version 3.0.0-beta.15
+        run: dotnet tool install --global MacroDeck.Plugin.Cli --version 3.0.0-beta.17
 
       - name: Build the ${{ matrix.rid }} package
         run: macrodeck-plugin build --source src/SystemMedia --rid ${{ matrix.rid }} --output ./artifacts
