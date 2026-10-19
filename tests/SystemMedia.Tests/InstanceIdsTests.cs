@@ -36,13 +36,6 @@ public sealed class InstanceIdsTests
 		Assert.That(InstanceIds.ForApp("Spotify.exe"), Is.EqualTo("app-spotify-exe-b527fa0a"));
 	}
 
-	// Pinned: templates persist it.
-	[Test]
-	public void The_variable_mapping_never_changes_and_shares_the_instance_hash()
-	{
-		Assert.That(InstanceIds.ForAppVariables("Spotify.exe"), Is.EqualTo("spotify-exe-b527fa0a"));
-	}
-
 	[Test]
 	public void Ids_that_slug_the_same_still_map_to_different_instances()
 	{

@@ -97,11 +97,38 @@
   <data name="Variables.RepeatMode" xml:space="preserve">
     <value>Repeat mode</value>
   </data>
-  <data name="Variables.ForApp" xml:space="preserve">
-    <value>{app}: {variable}</value>
+  <data name="Variables.App.TrackName" xml:space="preserve">
+    <value>{app}: Track name</value>
   </data>
-  <data name="Variables.AppPlaceholder" xml:space="preserve">
-    <value>App</value>
+  <data name="Variables.App.Artist" xml:space="preserve">
+    <value>{app}: Artist</value>
+  </data>
+  <data name="Variables.App.Album" xml:space="preserve">
+    <value>{app}: Album</value>
+  </data>
+  <data name="Variables.App.PlaybackState" xml:space="preserve">
+    <value>{app}: Playback state</value>
+  </data>
+  <data name="Variables.App.IsPlaying" xml:space="preserve">
+    <value>{app}: Is playing</value>
+  </data>
+  <data name="Variables.App.Position" xml:space="preserve">
+    <value>{app}: Position</value>
+  </data>
+  <data name="Variables.App.Duration" xml:space="preserve">
+    <value>{app}: Duration</value>
+  </data>
+  <data name="Variables.App.ProgressPercentage" xml:space="preserve">
+    <value>{app}: Progress</value>
+  </data>
+  <data name="Variables.App.Volume" xml:space="preserve">
+    <value>{app}: App volume</value>
+  </data>
+  <data name="Variables.App.ShuffleEnabled" xml:space="preserve">
+    <value>{app}: Shuffle enabled</value>
+  </data>
+  <data name="Variables.App.RepeatMode" xml:space="preserve">
+    <value>{app}: Repeat mode</value>
   </data>
   <data name="Variables.OutputDevice" xml:space="preserve">
     <value>Default output device</value>

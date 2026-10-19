@@ -12,8 +12,7 @@ internal static class SystemMediaVariables
 	internal const string PositionId = "system-media-position";
 	internal const string VolumeId = "system-media-volume";
 
-	private const string NamePrefix = "system_media_";
-	private const string AppNameName = NamePrefix + "app_name";
+	private const string IdPrefix = "system-media-";
 
 	private static readonly TimeSpan _fast = TimeSpan.FromSeconds(1);
 	private static readonly TimeSpan _normal = TimeSpan.FromSeconds(2);
@@ -21,7 +20,7 @@ internal static class SystemMediaVariables
 
 	private static readonly Entry[] _entries =
 	[
-		Text(AppNameName, Strings.Variables.AppName(), state => state.DeviceName),
+		Text("system_media_app_name", Strings.Variables.AppName(), state => state.DeviceName),
 		Text("system_media_track_name", Strings.Variables.TrackName(), state => state.TrackName),
 		Text("system_media_artist", Strings.Variables.Artist(), state => state.Artists.Count == 0 ? null : string.Join(", ", state.Artists)),
 		Text("system_media_album", Strings.Variables.Album(), state => state.AlbumName),
@@ -70,21 +69,80 @@ internal static class SystemMediaVariables
 	internal static IReadOnlyList<VariableDefinition> All { get; } =
 		[.. _entries.Select(entry => entry.Definition), .. _devices.Select(device => device.Definition)];
 
-	// An app's own variables need no app name: the app is in their name.
-	private static readonly Entry[] _appEntries = [.. _entries.Where(entry => entry.Definition.Name != AppNameName)];
+	// One string per variable: a localized argument inside another does not reach the host. No app name, the app is in the name.
+	private static readonly Dictionary<string, Func<LocalizedText, LocalizedString>> _appDisplayNames = new(StringComparer.Ordinal)
+	{
+		["system_media_track_name"] = Strings.Variables.App.TrackName,
+		["system_media_artist"] = Strings.Variables.App.Artist,
+		["system_media_album"] = Strings.Variables.App.Album,
+		["system_media_playback_state"] = Strings.Variables.App.PlaybackState,
+		["system_media_is_playing"] = Strings.Variables.App.IsPlaying,
+		["system_media_position"] = Strings.Variables.App.Position,
+		["system_media_duration"] = Strings.Variables.App.Duration,
+		["system_media_progress_percentage"] = Strings.Variables.App.ProgressPercentage,
+		["system_media_volume"] = Strings.Variables.App.Volume,
+		["system_media_shuffle_enabled"] = Strings.Variables.App.ShuffleEnabled,
+		["system_media_repeat_mode"] = Strings.Variables.App.RepeatMode,
+	};
 
-	internal static int PerApp => _appEntries.Length;
+	private static readonly Entry[] _appEntries = [.. _entries.Where(entry => _appDisplayNames.ContainsKey(entry.Definition.Name!))];
 
-	internal static IReadOnlyList<VariableDefinition> AppTemplates { get; } =
+	internal static string AppFolderId(string instanceId) => IdPrefix + instanceId;
+
+	internal static VariableDefinition AppFolder(string instanceId, string appName) =>
+		VariableDefinition.OnDemand(AppFolderId(instanceId), VariableType.Text) with
+		{
+			DisplayName = appName,
+			IsContainer = true,
+			IsBindable = false,
+		};
+
+	// The host keeps the id of a linked variable, not its name, so a name may take the hash only while two apps clash.
+	internal static IReadOnlyDictionary<string, string> NameKeys(IEnumerable<(string InstanceId, string AppName)> apps)
+	{
+		var slugs = apps.Select(app => (app.InstanceId, Slug: InstanceIds.Slug(app.AppName).Replace('-', '_'))).ToList();
+		var shared = slugs.GroupBy(app => app.Slug, StringComparer.Ordinal).Where(group => group.Count() > 1).Select(group => group.Key).ToHashSet(StringComparer.Ordinal);
+		return slugs.ToDictionary(
+			app => app.InstanceId,
+			app => app.Slug.Length > 0 && !shared.Contains(app.Slug) ? app.Slug : WithHash(app.Slug, app.InstanceId),
+			StringComparer.Ordinal);
+	}
+
+	internal static IReadOnlyList<VariableDefinition> ForApp(string instanceId, string appName, string nameKey) =>
 	[
-		.. _appEntries.Select(entry => ForApp(entry, VariableNameTemplate.Placeholder("app"), Strings.Variables.AppPlaceholder())),
+		.. _appEntries.Select(entry =>
+		{
+			var id = AppVariableId(instanceId, entry.Definition.ResolvedId!);
+			return entry.Definition with
+			{
+				Id = id,
+				Name = $"system_media_{nameKey}_{entry.Definition.Name!["system_media_".Length..]}",
+				Materialization = VariableMaterialization.OnDemand,
+				ParentId = AppFolderId(instanceId),
+				DisplayName = _appDisplayNames[entry.Definition.Name!](appName),
+			};
+		}),
 	];
 
-	// Each one is paired with the id of the "any app" variable it reads like.
-	internal static IEnumerable<(VariableDefinition Definition, string CurrentId)> ForApp(string appId, string appName)
+	// Every word typed has to appear in the variable's name or its app's name, so "vlc artist" finds VLC's artist.
+	internal static bool Matches(VariableDefinition variable, string appName, string search)
 	{
-		var key = InstanceIds.ForAppVariables(appId).Replace('-', '_');
-		return _appEntries.Select(entry => (ForApp(entry, key, appName), entry.Definition.ResolvedId!));
+		var text = $"{variable.Name} {appName}";
+		return search.Split([' ', '_', '.'], StringSplitOptions.RemoveEmptyEntries)
+			.All(word => text.Contains(word, StringComparison.OrdinalIgnoreCase));
+	}
+
+	// The id of the "any app" variable that an app's variable reads like, or null if it is none of that app's.
+	internal static string? CurrentIdOf(string localId, string instanceId)
+	{
+		var prefix = AppFolderId(instanceId) + "-";
+		if (!localId.StartsWith(prefix, StringComparison.Ordinal))
+		{
+			return null;
+		}
+
+		var currentId = IdPrefix + localId[prefix.Length..];
+		return Array.Exists(_appEntries, entry => entry.Definition.ResolvedId == currentId) ? currentId : null;
 	}
 
 	internal static AudioDeviceRole? DeviceRole(string localId) =>
@@ -115,12 +173,14 @@ internal static class SystemMediaVariables
 	private static Entry Text(string name, LocalizedText displayName, Func<MusicPlayerState, object?> read, TimeSpan? refresh = null) =>
 		new(VariableDefinition.Eager(name, VariableType.Text, refreshInterval: refresh ?? _normal) with { DisplayName = displayName }, read);
 
-	private static VariableDefinition ForApp(Entry entry, string key, LocalizedText appName) =>
-		entry.Definition with
-		{
-			Name = $"{NamePrefix}{key}_{entry.Definition.Name![NamePrefix.Length..]}",
-			DisplayName = Strings.Variables.ForApp(appName, entry.Definition.DisplayName),
-		};
+	private static string WithHash(string slug, string instanceId)
+	{
+		var hash = instanceId[(instanceId.LastIndexOf('-') + 1)..];
+		return slug.Length == 0 ? hash : $"{slug}_{hash}";
+	}
+
+	private static string AppVariableId(string instanceId, string currentId) =>
+		$"{AppFolderId(instanceId)}-{currentId[IdPrefix.Length..]}";
 
 	private sealed record Entry(VariableDefinition Definition, Func<MusicPlayerState, object?> Read);
 

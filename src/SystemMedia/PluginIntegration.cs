@@ -1,3 +1,4 @@
+using System.Globalization;
 using MacroDeck.Plugin.Hosting;
 using MacroDeck.Plugin.Hosting.Integrations.HostApis;
 using MacroDeck.Plugin.Protocol.Handshake;
@@ -56,10 +57,10 @@ public sealed class PluginIntegration
 	private readonly IReadOnlyList<ActionParameter> _currentOptions;
 	private readonly StateSnapshotCache _currentState;
 	private readonly MediaEventWatcher _events;
+	private readonly AppVariablePublisher _appVariables;
 	private readonly Lock _appsGate = new();
 
 	private volatile KnownApp[] _apps = [];
-	private volatile AppVariables _appVariables = AppVariables.None;
 	private bool _rememberedAppsLoaded;
 
 	public PluginIntegration(IPluginCatalogNotifier catalog, IOptions<PluginHostOptions> hostOptions, ILogger logger)
@@ -87,6 +88,7 @@ public sealed class PluginIntegration
 		_current = CreatePlayer(appId: null);
 		_currentState = new StateSnapshotCache(_current.GetStateAsync, TimeProvider.System);
 		_events = new MediaEventWatcher(WatchedApps, CurrentAppInstanceId, _logger);
+		_appVariables = new AppVariablePublisher(ReadAppVariablesAsync, _logger);
 		_currentOptions =
 		[
 			ActionParameter.Toggle(
@@ -113,9 +115,15 @@ public sealed class PluginIntegration
 
 	public IReadOnlyList<IActionDefinition> Actions { get; }
 
-	public IReadOnlyList<VariableDefinition> Variables => [.. SystemMediaVariables.All, .. _appVariables.Definitions];
+	public IReadOnlyList<VariableDefinition> Variables => SystemMediaVariables.All;
 
-	public IReadOnlyList<VariableDefinition> DeclaredVariables => [.. SystemMediaVariables.All, .. SystemMediaVariables.AppTemplates];
+	// Each known app's own variables, one folder per app. A catalog has no limit on how many it offers.
+	public bool SupportsCatalog => true;
+
+	public bool SupportsPush => true;
+
+	// Without search the host flattens the catalog and lists no folders.
+	public bool SupportsSearch => true;
 
 	public IReadOnlyList<EventDefinition> EventDefinitions => MediaEvents.All;
 
@@ -151,12 +159,14 @@ public sealed class PluginIntegration
 	{
 		_platform.SessionsChanged -= OnSessionsChanged;
 		await _events.StopAsync();
+		await _appVariables.StopAsync();
 	}
 
 	public void Dispose()
 	{
 		_platform.SessionsChanged -= OnSessionsChanged;
 		_events.Dispose();
+		_appVariables.Dispose();
 		_platform.Dispose();
 		_youTube.Dispose();
 		_youTubeLookup.Dispose();
@@ -184,11 +194,9 @@ public sealed class PluginIntegration
 				: VariableReading.Unavailable;
 		}
 
-		if (_appVariables.Find(localId) is { } target)
+		if (FindAppVariable(localId) is var (app, currentId))
 		{
-			return FindApp(target.AppId) is { } app
-				? SystemMediaVariables.Read(target.CurrentId, await app.State.GetAsync(cancellationToken))
-				: VariableReading.Unavailable;
+			return SystemMediaVariables.Read(currentId, await app.State.GetAsync(cancellationToken));
 		}
 
 		var state = await _currentState.GetAsync(cancellationToken);
@@ -202,11 +210,11 @@ public sealed class PluginIntegration
 			return SetDefaultAudioDeviceAsync(role, value, cancellationToken);
 		}
 
-		IMusicPlayer? player = _current;
-		if (_appVariables.Find(localId) is { } target)
+		IMusicPlayer player = _current;
+		if (FindAppVariable(localId) is var (app, currentId))
 		{
-			player = FindApp(target.AppId)?.Player;
-			localId = target.CurrentId;
+			player = app.Player;
+			localId = currentId;
 		}
 
 		return localId switch
@@ -215,6 +223,83 @@ public sealed class PluginIntegration
 			SystemMediaVariables.PositionId => MusicPlayerVariableWrites.SeekAsync(player, value, cancellationToken),
 			_ => ValueTask.FromResult(VariableWriteResult.NotWritable()),
 		};
+	}
+
+	public ValueTask<VariableCatalogPage> DiscoverAsync(VariableCatalogQuery query, CancellationToken cancellationToken = default)
+	{
+		var apps = _apps;
+		IReadOnlyList<VariableDefinition> items = query switch
+		{
+			{ ParentId: null, Search: { Length: > 0 } search } =>
+				[.. apps.SelectMany(app => AppVariablesOf(apps, app).Where(variable => SystemMediaVariables.Matches(variable, app.DisplayName, search)))],
+			{ ParentId: null } => [.. apps.Select(app => SystemMediaVariables.AppFolder(app.InstanceId, app.DisplayName))],
+			_ => Array.Find(apps, app => SystemMediaVariables.AppFolderId(app.InstanceId) == query.ParentId) is { } parent
+				? AppVariablesOf(apps, parent)
+				: [],
+		};
+
+		var offset = int.TryParse(query.ContinuationToken, CultureInfo.InvariantCulture, out var token) ? Math.Max(token, 0) : 0;
+		var next = offset + query.PageSize;
+		return ValueTask.FromResult(new VariableCatalogPage
+		{
+			Items = [.. items.Skip(offset).Take(query.PageSize)],
+			ContinuationToken = next < items.Count ? next.ToString(CultureInfo.InvariantCulture) : null,
+		});
+	}
+
+	public ValueTask<VariableDefinition?> ResolveAsync(string localId, CancellationToken cancellationToken = default)
+	{
+		var apps = _apps;
+		return ValueTask.FromResult(apps
+			.SelectMany(app => (IEnumerable<VariableDefinition>)[SystemMediaVariables.AppFolder(app.InstanceId, app.DisplayName), .. AppVariablesOf(apps, app)])
+			.FirstOrDefault(definition => definition.Id == localId));
+	}
+
+	public async ValueTask<IReadOnlyList<VariableValue>> SubscribeAsync(IReadOnlyCollection<string> localIds, CancellationToken cancellationToken = default)
+	{
+		var values = await ReadAppVariablesAsync(localIds, cancellationToken);
+		_appVariables.Subscribe(localIds, values);
+		return values;
+	}
+
+	// The host keeps the catalog it browsed last, even across a plugin restart, until told to reload it.
+	public Task OnAttachedAsync(IVariableSink sink, CancellationToken cancellationToken = default)
+	{
+		_appVariables.Start(sink);
+		return sink.InvalidateCatalogAsync(cancellationToken);
+	}
+
+	private async Task<IReadOnlyList<VariableValue>> ReadAppVariablesAsync(IReadOnlyCollection<string> localIds, CancellationToken cancellationToken)
+	{
+		var values = new List<VariableValue>();
+		foreach (var localId in localIds)
+		{
+			if (FindAppVariable(localId) is var (app, currentId))
+			{
+				values.Add(VariableValue.Of(localId, SystemMediaVariables.Read(currentId, await app.State.GetAsync(cancellationToken))));
+			}
+		}
+
+		return values;
+	}
+
+	private static IReadOnlyList<VariableDefinition> AppVariablesOf(KnownApp[] apps, KnownApp app) =>
+		SystemMediaVariables.ForApp(
+			app.InstanceId,
+			app.DisplayName,
+			SystemMediaVariables.NameKeys(apps.Select(known => (known.InstanceId, known.DisplayName)))[app.InstanceId]);
+
+	private (KnownApp App, string CurrentId)? FindAppVariable(string localId)
+	{
+		foreach (var app in _apps)
+		{
+			if (SystemMediaVariables.CurrentIdOf(localId, app.InstanceId) is { } currentId)
+			{
+				return (app, currentId);
+			}
+		}
+
+		return null;
 	}
 
 	private async ValueTask<VariableWriteResult> SetDefaultAudioDeviceAsync(AudioDeviceRole role, object? value, CancellationToken cancellationToken)
@@ -372,9 +457,6 @@ public sealed class PluginIntegration
 	private IMusicPlayer? ResolvePlayer(string? instanceId) =>
 		string.IsNullOrEmpty(instanceId) ? _current : GetPlayer(instanceId);
 
-	private KnownApp? FindApp(string appId) =>
-		Array.Find(_apps, app => string.Equals(app.AppId, appId, StringComparison.Ordinal));
-
 	private void OnSessionsChanged(object? sender, EventArgs e)
 	{
 		if (RememberActiveApps())
@@ -386,7 +468,7 @@ public sealed class PluginIntegration
 	private void AppsChanged(string reason)
 	{
 		_catalog.CatalogChanged(CapabilityKinds.MusicPlayer, reason: reason);
-		_catalog.CatalogChanged(CapabilityKinds.Variables, reason: reason);
+		_ = _appVariables.Sink?.InvalidateCatalogAsync();
 	}
 
 	private async Task TryStartPlatformAsync(CancellationToken cancellationToken)
@@ -468,7 +550,6 @@ public sealed class PluginIntegration
 		if (changed)
 		{
 			_apps = [.. merged];
-			_appVariables = new AppVariables(merged.Select(known => (known.AppId, known.DisplayName)));
 		}
 
 		return changed;
