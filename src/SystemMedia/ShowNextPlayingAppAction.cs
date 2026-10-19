@@ -16,7 +16,7 @@ internal sealed class ShowNextPlayingAppAction(Func<bool> showNext) : IActionDef
 
 	public IReadOnlyList<ActionParameter> Parameters => [];
 
-	public MacroDeckPlatform Platforms => MacroDeckPlatform.Windows | MacroDeckPlatform.MacOS;
+	public MacroDeckPlatform Platforms => MacroDeckPlatform.Windows | MacroDeckPlatform.MacOs;
 
 	public IActionExecutor CreateExecutor() => new Executor(showNext);
 
