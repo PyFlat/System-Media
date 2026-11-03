@@ -1,5 +1,12 @@
 # System Media
 
+<a href="https://macro-deck.app/store/com.pyflat.system-media">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://assets.macro-deck.app/branding/Open%20in%20the%20Macro%20Deck%20Store%20Badge%20Dark.png">
+    <img alt="Open in the Macro Deck Store" src="https://assets.macro-deck.app/branding/Open%20in%20the%20Macro%20Deck%20Store%20Badge%20Light.png" height="56">
+  </picture>
+</a>
+
 A [Macro Deck 3](https://macro-deck.app/) plugin that connects Macro Deck's **Music Player** widget to
 whatever is playing on your computer. It reads the operating system's own media controls (the Windows
 media overlay, macOS Now Playing, MPRIS on Linux), so any app that shows up there works without setup:
