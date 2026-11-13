@@ -71,16 +71,17 @@ Only apps that are playing take part; a paused app is skipped.
 
 For whatever is playing right now (the same as *Any app*):
 
-| Variable                                                               | Value                                        |
-| ---------------------------------------------------------------------- | -------------------------------------------- |
-| `system_media_app_name`                                                | The playing app, e.g. `Firefox`              |
-| `system_media_track_name`, `system_media_artist`, `system_media_album` | Track metadata                               |
-| `system_media_playback_state`                                          | `playing`, `paused` or `stopped`             |
-| `system_media_is_playing`                                              | `true` while playing                         |
-| `system_media_position`, `system_media_duration`                       | Seconds; the position can be set to seek     |
-| `system_media_progress_percentage`                                     | 0 to 100                                     |
-| `system_media_volume`                                                  | The app's volume in percent; can be set      |
-| `system_media_shuffle_enabled`, `system_media_repeat_mode`             | `repeat_mode` is `off`, `track` or `context` |
+| Variable                                                               | Value                                                                                      |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `system_media_app_name`                                                | The playing app, e.g. `Firefox`                                                            |
+| `system_media_track_name`, `system_media_artist`, `system_media_album` | Track metadata                                                                             |
+| `system_media_album_art_url`                                           | The cover as a Macro Deck address, e.g. for a custom button; the app icon if there is none |
+| `system_media_playback_state`                                          | `playing`, `paused` or `stopped`                                                           |
+| `system_media_is_playing`                                              | `true` while playing                                                                       |
+| `system_media_position`, `system_media_duration`                       | Seconds; the position can be set to seek                                                   |
+| `system_media_progress_percentage`                                     | 0 to 100                                                                                   |
+| `system_media_volume`                                                  | The app's volume in percent; can be set                                                    |
+| `system_media_shuffle_enabled`, `system_media_repeat_mode`             | `repeat_mode` is `off`, `track` or `context`                                               |
 
 Every app listed as an instance also has its own copy of these, except the app name, so a "Now Playing" text
 can follow one player while another plays too. They are in a folder per app in the variable picker, e.g.

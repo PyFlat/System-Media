@@ -46,6 +46,7 @@ public sealed class PluginIntegration
 	private readonly CompositeMediaPlatform _platform;
 	private readonly CurrentAppSelection _selection;
 	private readonly IPluginCatalogNotifier _catalog;
+	private readonly string _pluginId;
 	private readonly KnownAppsStore _store;
 	private readonly PluginSettingsStore _settings;
 	private readonly ThumbnailHistory _thumbnails;
@@ -63,9 +64,10 @@ public sealed class PluginIntegration
 	private volatile KnownApp[] _apps = [];
 	private bool _rememberedAppsLoaded;
 
-	public PluginIntegration(IPluginCatalogNotifier catalog, IOptions<PluginHostOptions> hostOptions, ILogger logger)
+	public PluginIntegration(IPluginCatalogNotifier catalog, IOptions<PluginHostOptions> hostOptions, PluginMetadata metadata, ILogger logger)
 	{
 		_catalog = catalog;
+		_pluginId = metadata.Id;
 		_logger = logger.ForContext<PluginIntegration>();
 		var dataDirectory = hostOptions.Value.DataDirectory;
 		var demo = false;
@@ -196,11 +198,11 @@ public sealed class PluginIntegration
 
 		if (FindAppVariable(localId) is var (app, currentId))
 		{
-			return SystemMediaVariables.Read(currentId, await app.State.GetAsync(cancellationToken));
+			return SystemMediaVariables.Read(currentId, await app.State.GetAsync(cancellationToken), QualifiedPlayerId(app.InstanceId));
 		}
 
 		var state = await _currentState.GetAsync(cancellationToken);
-		return SystemMediaVariables.Read(localId, state);
+		return SystemMediaVariables.Read(localId, state, QualifiedPlayerId(InstanceIds.Current));
 	}
 
 	public ValueTask<VariableWriteResult> SetValueAsync(string localId, object? value, CancellationToken cancellationToken = default)
@@ -276,12 +278,15 @@ public sealed class PluginIntegration
 		{
 			if (FindAppVariable(localId) is var (app, currentId))
 			{
-				values.Add(VariableValue.Of(localId, SystemMediaVariables.Read(currentId, await app.State.GetAsync(cancellationToken))));
+				var state = await app.State.GetAsync(cancellationToken);
+				values.Add(VariableValue.Of(localId, SystemMediaVariables.Read(currentId, state, QualifiedPlayerId(app.InstanceId))));
 			}
 		}
 
 		return values;
 	}
+
+	private string QualifiedPlayerId(string instanceId) => SystemMediaVariables.QualifiedPlayerId(_pluginId, instanceId);
 
 	private static IReadOnlyList<VariableDefinition> AppVariablesOf(KnownApp[] apps, KnownApp app) =>
 		SystemMediaVariables.ForApp(

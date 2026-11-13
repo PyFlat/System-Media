@@ -73,6 +73,9 @@
   <data name="Variables.Album" xml:space="preserve">
     <value>Album</value>
   </data>
+  <data name="Variables.AlbumArtUrl" xml:space="preserve">
+    <value>Album art URL</value>
+  </data>
   <data name="Variables.PlaybackState" xml:space="preserve">
     <value>Playback state</value>
   </data>
@@ -105,6 +108,9 @@
   </data>
   <data name="Variables.App.Album" xml:space="preserve">
     <value>{app}: Album</value>
+  </data>
+  <data name="Variables.App.AlbumArtUrl" xml:space="preserve">
+    <value>{app}: Album art URL</value>
   </data>
   <data name="Variables.App.PlaybackState" xml:space="preserve">
     <value>{app}: Playback state</value>

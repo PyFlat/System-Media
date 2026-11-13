@@ -11,6 +11,8 @@ namespace SystemMedia.Tests;
 [TestFixture]
 public sealed class SystemMediaVariablesTests
 {
+	private const string CurrentPlayer = "com.pyflat.system-media::current";
+
 	private static readonly MusicPlayerState _playing = new()
 	{
 		IsConnected = true,
@@ -44,7 +46,7 @@ public sealed class SystemMediaVariablesTests
 	[TestCase("system-media-repeat-mode", "context")]
 	public void A_variable_reads_its_value_from_the_current_state(string id, object expected)
 	{
-		Assert.That(SystemMediaVariables.Read(id, _playing).Value, Is.EqualTo(expected));
+		Assert.That(SystemMediaVariables.Read(id, _playing, CurrentPlayer).Value, Is.EqualTo(expected));
 	}
 
 	[TestCase("system-media-output-device", nameof(AudioDeviceRole.Output))]
@@ -68,7 +70,7 @@ public sealed class SystemMediaVariablesTests
 	[Test]
 	public void The_position_slider_ends_at_the_track_duration()
 	{
-		var reading = SystemMediaVariables.Read(SystemMediaVariables.PositionId, _playing);
+		var reading = SystemMediaVariables.Read(SystemMediaVariables.PositionId, _playing, CurrentPlayer);
 
 		Assert.That(reading.Max, Is.EqualTo(256));
 	}
@@ -160,11 +162,40 @@ public sealed class SystemMediaVariablesTests
 		Assert.That(folder.IsBindable, Is.False);
 	}
 
+	// Pinned: the host's artwork endpoint looks the player up by this exact id.
+	[Test]
+	public void The_player_id_is_qualified_with_the_plugin_id()
+	{
+		Assert.That(SystemMediaVariables.QualifiedPlayerId("com.pyflat.system-media", "app-spotify-exe-b527fa0a"), Is.EqualTo("com.pyflat.system-media::app-spotify-exe-b527fa0a"));
+	}
+
+	[Test]
+	public void The_album_art_url_points_at_the_hosts_artwork_endpoint()
+	{
+		var state = _playing with { ArtworkId = "art-0123456789abcdef" };
+
+		Assert.That(
+			SystemMediaVariables.Read("system-media-album-art-url", state, "com.pyflat.system-media::app-vlc@web-2900ecd1").Value,
+			Is.EqualTo("/api/music-player/artwork/art-0123456789abcdef?instanceId=com.pyflat.system-media%3A%3Aapp-vlc%40web-2900ecd1"));
+	}
+
+	[Test]
+	public void A_track_without_artwork_has_no_album_art_url()
+	{
+		Assert.That(SystemMediaVariables.Read("system-media-album-art-url", _playing, CurrentPlayer).Value, Is.Null);
+	}
+
+	[Test]
+	public void An_app_album_art_url_reads_like_the_any_app_one()
+	{
+		Assert.That(SystemMediaVariables.CurrentIdOf("system-media-app-spotify-exe-b527fa0a-album-art-url", "app-spotify-exe-b527fa0a"), Is.EqualTo("system-media-album-art-url"));
+	}
+
 	[Test]
 	public void A_stream_without_a_timeline_has_no_progress()
 	{
 		var stream = _playing with { Position = null, Duration = null };
 
-		Assert.That(SystemMediaVariables.Read("system-media-progress-percentage", stream).Value, Is.Null);
+		Assert.That(SystemMediaVariables.Read("system-media-progress-percentage", stream, CurrentPlayer).Value, Is.Null);
 	}
 }
