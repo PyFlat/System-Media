@@ -13,6 +13,7 @@ internal static class SystemMediaVariables
 	internal const string VolumeId = "system-media-volume";
 
 	private const string IdPrefix = "system-media-";
+	private const string ArtworkPath = "/api/music-player/artwork/";
 
 	private static readonly TimeSpan _fast = TimeSpan.FromSeconds(1);
 	private static readonly TimeSpan _normal = TimeSpan.FromSeconds(2);
@@ -24,6 +25,9 @@ internal static class SystemMediaVariables
 		Text("system_media_track_name", Strings.Variables.TrackName(), state => state.TrackName),
 		Text("system_media_artist", Strings.Variables.Artist(), state => state.Artists.Count == 0 ? null : string.Join(", ", state.Artists)),
 		Text("system_media_album", Strings.Variables.Album(), state => state.AlbumName),
+		new(VariableDefinition.Eager("system_media_album_art_url", VariableType.Text, refreshInterval: _normal)
+			with { DisplayName = Strings.Variables.AlbumArtUrl() },
+			ArtworkUrl),
 		Text("system_media_playback_state", Strings.Variables.PlaybackState(), state => state.PlaybackState.ToString().ToLowerInvariant()),
 		new(VariableDefinition.Eager("system_media_is_playing", VariableType.Boolean, refreshInterval: _normal)
 			with { DisplayName = Strings.Variables.IsPlaying() },
@@ -75,6 +79,7 @@ internal static class SystemMediaVariables
 		["system_media_track_name"] = Strings.Variables.App.TrackName,
 		["system_media_artist"] = Strings.Variables.App.Artist,
 		["system_media_album"] = Strings.Variables.App.Album,
+		["system_media_album_art_url"] = Strings.Variables.App.AlbumArtUrl,
 		["system_media_playback_state"] = Strings.Variables.App.PlaybackState,
 		["system_media_is_playing"] = Strings.Variables.App.IsPlaying,
 		["system_media_position"] = Strings.Variables.App.Position,
@@ -148,7 +153,10 @@ internal static class SystemMediaVariables
 	internal static AudioDeviceRole? DeviceRole(string localId) =>
 		Array.Find(_devices, candidate => string.Equals(candidate.Definition.ResolvedId, localId, StringComparison.Ordinal))?.Role;
 
-	internal static VariableReading Read(string localId, MusicPlayerState state)
+	// The host only finds the player under the id qualified with the plugin's own.
+	internal static string QualifiedPlayerId(string pluginId, string instanceId) => $"{pluginId}::{instanceId}";
+
+	internal static VariableReading Read(string localId, MusicPlayerState state, string qualifiedPlayerId)
 	{
 		var entry = Array.Find(_entries, candidate => string.Equals(candidate.Definition.ResolvedId, localId, StringComparison.Ordinal));
 		if (entry is null)
@@ -156,7 +164,7 @@ internal static class SystemMediaVariables
 			return VariableReading.Unavailable;
 		}
 
-		var value = entry.Read(state);
+		var value = entry.Read(state, qualifiedPlayerId);
 		return localId switch
 		{
 			VolumeId => VariableReading.Of(value, 0, 100, 1),
@@ -168,6 +176,12 @@ internal static class SystemMediaVariables
 	private static int? ProgressPercentage(MusicPlayerState state) =>
 		state is { Position: { } position, Duration: { } duration } && duration > TimeSpan.Zero
 			? (int)Math.Clamp(Math.Round(position / duration * 100), 0, 100)
+			: null;
+
+	// The host's own endpoint, not the source: it serves the same image the Music Player widget shows.
+	private static string? ArtworkUrl(MusicPlayerState state, string qualifiedPlayerId) =>
+		state.ArtworkId is { } artworkId
+			? $"{ArtworkPath}{Uri.EscapeDataString(artworkId)}?instanceId={Uri.EscapeDataString(qualifiedPlayerId)}"
 			: null;
 
 	private static Entry Text(string name, LocalizedText displayName, Func<MusicPlayerState, object?> read, TimeSpan? refresh = null) =>
@@ -182,7 +196,13 @@ internal static class SystemMediaVariables
 	private static string AppVariableId(string instanceId, string currentId) =>
 		$"{AppFolderId(instanceId)}-{currentId[IdPrefix.Length..]}";
 
-	private sealed record Entry(VariableDefinition Definition, Func<MusicPlayerState, object?> Read);
+	private sealed record Entry(VariableDefinition Definition, Func<MusicPlayerState, string, object?> Read)
+	{
+		public Entry(VariableDefinition definition, Func<MusicPlayerState, object?> read)
+			: this(definition, (state, _) => read(state))
+		{
+		}
+	}
 
 	private static DeviceEntry Device(string name, LocalizedText displayName, AudioDeviceRole role) =>
 		new(VariableDefinition.Eager(name, VariableType.Text, refreshInterval: _slow)
